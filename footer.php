@@ -4,15 +4,17 @@
 // as well as the complete HTML and JavaScript for the AI chat widget,
 // the notification system, and DataTables library includes.
 ?>
-</div> <!-- Closes the container div from header.php -->
-</main> <!-- Closes the main tag from header.php -->
+        </div><!-- /container -->
+    </main>
 
-<!-- Application Footer -->
-<footer class="text-center text-sm text-gray-600 py-4 mt-auto border-t border-gray-200 bg-gray-50">
-    &copy; <?php echo date("Y"); ?> Smart Medi Stocks. All rights reserved. |
-    <a href="terms.php" class="text-blue-600 hover:underline" target="_blank">Terms of Use</a> |
-    <a href="privacy.php" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>
-</footer>
+    <!-- Application Footer -->
+    <footer class="text-center text-xs text-slate-400 py-3 mt-auto border-t border-slate-200 bg-white">
+        &copy; <?php echo date('Y'); ?> SmartMediStocks. All rights reserved. &nbsp;|&nbsp;
+        <a href="terms.php" class="text-blue-500 hover:underline" target="_blank">Terms of Use</a> &nbsp;|&nbsp;
+        <a href="privacy.php" class="text-blue-500 hover:underline" target="_blank">Privacy Policy</a>
+    </footer>
+
+</div><!-- /#sms-content -->
 
 <!-- AI Chat Widget -->
 <div id="ai-chat-widget" class="fixed bottom-5 right-5 z-50">
@@ -472,6 +474,20 @@
             fetchNotifications(true);
             setInterval(fetchNotifications, POLLING_INTERVAL);
         }
+
+        // ── Topbar dropdowns ──
+        // User menu toggle
+        $('#user-menu-btn').on('click', function(e) {
+            e.stopPropagation();
+            $('#user-menu-dropdown').toggleClass('hidden');
+            $('#notification-dropdown').addClass('hidden');
+        });
+        // Notification bell toggle (supplemental — native bell still works via existing code)
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#user-menu-btn, #user-menu-dropdown').length) {
+                $('#user-menu-dropdown').addClass('hidden');
+            }
+        });
     });
 </script>
 
