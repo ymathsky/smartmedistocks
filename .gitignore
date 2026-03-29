@@ -6,6 +6,10 @@ php_errorlog
 # ---- Uploaded files (if stored locally) ----
 uploads/
 
+# ---- Database credentials ----
+db_connection.php
+smart/db_connection.php
+
 # ---- Environment / secrets (add if you use these) ----
 .env
 .env.local
