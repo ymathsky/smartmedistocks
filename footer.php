@@ -4,7 +4,6 @@
 // as well as the complete HTML and JavaScript for the AI chat widget,
 // the notification system, and DataTables library includes.
 ?>
-</div> <!-- Closes the container div from header.php -->
 </main> <!-- Closes the main tag from header.php -->
 
 <!-- Application Footer -->
@@ -473,6 +472,31 @@
             setInterval(fetchNotifications, POLLING_INTERVAL);
         }
     });
+</script>
+
+<script>
+// Topbar dropdown toggles
+document.addEventListener('DOMContentLoaded', function () {
+    function makeToggle(btnId, dropId) {
+        var btn  = document.getElementById(btnId);
+        var drop = document.getElementById(dropId);
+        if (!btn || !drop) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            drop.classList.toggle('hidden');
+        });
+    }
+    makeToggle('notification-bubble', 'notification-dropdown');
+    makeToggle('user-menu-btn', 'user-menu-dropdown');
+
+    document.addEventListener('click', function () {
+        var ids = ['notification-dropdown', 'user-menu-dropdown'];
+        ids.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+    });
+});
 </script>
 
 </body>

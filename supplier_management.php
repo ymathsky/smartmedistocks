@@ -16,7 +16,7 @@ $result = $conn->query($sql);
 ?>
 
 <!-- Main Content -->
-<div class="flex-1 p-6 bg-gray-100">
+<div class="p-6">
     <div class="bg-white p-8 rounded-lg shadow-md w-full">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Supplier Management</h1>

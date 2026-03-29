@@ -186,29 +186,3 @@ $__avatar   = strtoupper(substr($_SESSION['username'] ?? 'U', 0, 2));
 
         <!-- Main Content Start -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50">
-            <div class="container mx-auto px-6 py-8">
-
-<script>
-// Topbar dropdown toggles
-document.addEventListener('DOMContentLoaded', function () {
-    function makeToggle(btnId, dropId) {
-        var btn  = document.getElementById(btnId);
-        var drop = document.getElementById(dropId);
-        if (!btn || !drop) return;
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            drop.classList.toggle('hidden');
-        });
-    }
-    makeToggle('notification-bubble', 'notification-dropdown');
-    makeToggle('user-menu-btn', 'user-menu-dropdown');
-
-    document.addEventListener('click', function () {
-        var ids = ['notification-dropdown', 'user-menu-dropdown'];
-        ids.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
-        });
-    });
-});
-</script>
