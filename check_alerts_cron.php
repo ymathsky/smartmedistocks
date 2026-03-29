@@ -327,5 +327,39 @@ if (!empty($all_alerts_found)) {
     error_log("CRON: No critical stock or expiry alerts found.");
 }
 
+// --- CHAT LOG CLEANUP ---
+// 1. Delete entries older than 90 days (absolute age limit)
+$chat_cleanup_age = $conn->query(
+    "DELETE FROM chat_log WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY)"
+);
+if ($chat_cleanup_age) {
+    $del_age = $conn->affected_rows;
+    if ($del_age > 0) error_log("CRON: Removed $del_age chat_log entries older than 90 days.");
+}
+
+// 2. Per-user cap: keep most recent 200 messages per user, delete the rest
+$users_with_log = $conn->query("SELECT DISTINCT user_id FROM chat_log");
+if ($users_with_log) {
+    $cap_stmt = $conn->prepare(
+        "DELETE FROM chat_log
+         WHERE user_id = ?
+           AND log_id NOT IN (
+               SELECT log_id FROM (
+                   SELECT log_id FROM chat_log WHERE user_id = ?
+                   ORDER BY created_at DESC LIMIT 200
+               ) AS keep_rows
+           )"
+    );
+    while ($u = $users_with_log->fetch_assoc()) {
+        $uid = (int)$u['user_id'];
+        $cap_stmt->bind_param("ii", $uid, $uid);
+        $cap_stmt->execute();
+        if ($cap_stmt->affected_rows > 0) {
+            error_log("CRON: Trimmed " . $cap_stmt->affected_rows . " excess chat_log rows for user #$uid.");
+        }
+    }
+    $cap_stmt->close();
+}
+
 // Do not close the connection if this script is included by another
 // $conn->close();
