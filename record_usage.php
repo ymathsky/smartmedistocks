@@ -22,168 +22,360 @@ $items_result = $conn->query("
 ");
 ?>
 
-<div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Record Item Usage (Transaction)</h1>
-        <a href="transaction_history.php" class="text-blue-600 hover:underline">View Transaction History &rarr;</a>
+<style>
+    .item-option-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s; }
+    .item-option-row:hover, .item-option-row.selected { background: #eff6ff; }
+    .item-option-row.selected { border-left: 3px solid #2563eb; }
+    .stock-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+    .stock-pill.green  { background: #dcfce7; color: #16a34a; }
+    .stock-pill.yellow { background: #fef9c3; color: #ca8a04; }
+    .stock-pill.red    { background: #fee2e2; color: #dc2626; }
+    #item_list_container { max-height: 260px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+    #item_list_container::-webkit-scrollbar { width: 6px; }
+    #item_list_container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .step-dot.active { background: #2563eb; color: #fff; }
+    .step-dot.done   { background: #22c55e; color: #fff; }
+    .step-dot.idle   { background: #e2e8f0; color: #94a3b8; }
+    .step-line { flex: 1; height: 2px; background: #e2e8f0; margin: 0 6px; }
+    .step-line.done { background: #22c55e; }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+</style>
+
+<div class="p-6 max-w-5xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Record Item Usage</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Log dispensed or consumed stock against a transaction date</p>
+        </div>
+        <a href="transaction_history.php" class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+            View Transaction History
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
     </div>
 
-    <!-- User Feedback -->
+    <!-- Alerts -->
     <?php
     if (isset($_SESSION['message'])) {
-        echo '<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert"><p>' . htmlspecialchars($_SESSION['message']) . '</p></div>';
+        echo '<div class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 mb-5"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mt-0.5 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><p class="text-sm font-medium">' . htmlspecialchars($_SESSION['message']) . '</p></div>';
         unset($_SESSION['message']);
     }
     if (isset($_SESSION['error'])) {
-        echo '<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert"><p>' . htmlspecialchars($_SESSION['error']) . '</p></div>';
+        echo '<div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-5"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mt-0.5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><p class="text-sm font-medium">' . htmlspecialchars($_SESSION['error']) . '</p></div>';
         unset($_SESSION['error']);
     }
     ?>
 
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <form action="record_usage_handler.php" method="POST">
-            <div class="mb-6">
-                <label for="item_id" class="block text-gray-700 font-bold mb-2">Select Item</label>
-                <!-- Search box -->
-                <input type="text" id="item_search" placeholder="Search by name or item code..." 
-                    class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
-                    autocomplete="off">
-                <select id="item_id" name="item_id" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required size="6">
-                    <option value="">-- Search above to filter items --</option>
+    <!-- Step Indicator -->
+    <div class="flex items-center mb-8 px-2">
+        <div class="step-dot active" id="step1_dot">1</div>
+        <div class="step-line" id="line12"></div>
+        <div class="step-dot idle" id="step2_dot">2</div>
+        <div class="step-line" id="line23"></div>
+        <div class="step-dot idle" id="step3_dot">3</div>
+    </div>
+
+    <form action="record_usage_handler.php" method="POST" id="usage_form">
+
+        <!-- Two-column layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- LEFT: Item Selection -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <h2 class="font-semibold text-gray-700">Step 1 — Select Item</h2>
+                </div>
+
+                <!-- Search -->
+                <div class="relative mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                    <input type="text" id="item_search" placeholder="Search by name or item code..."
+                        class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        autocomplete="off">
+                </div>
+
+                <!-- Results count -->
+                <p class="text-xs text-gray-400 mb-1.5" id="item_match_count"></p>
+
+                <!-- Item list -->
+                <div id="item_list_container">
                     <?php
                     if ($items_result && $items_result->num_rows > 0) {
                         while ($item = $items_result->fetch_assoc()) {
                             $stock = (int)$item['current_stock'];
-                            echo '<option value="' . htmlspecialchars($item['item_id']) . '"'
+                            if ($stock === 0) { $pill = 'red'; $pill_label = 'Out of stock'; }
+                            elseif ($stock <= 10) { $pill = 'yellow'; $pill_label = $stock . ' left'; }
+                            else { $pill = 'green'; $pill_label = $stock . ' units'; }
+                            echo '<div class="item-option-row"'
+                               . ' data-id="' . htmlspecialchars($item['item_id']) . '"'
                                . ' data-label="' . strtolower(htmlspecialchars($item['name'])) . ' ' . strtolower(htmlspecialchars($item['item_code'])) . '"'
                                . ' data-stock="' . $stock . '"'
-                               . '>' . htmlspecialchars($item['name']) . ' (' . htmlspecialchars($item['item_code']) . ')</option>';
+                               . ' data-name="' . htmlspecialchars($item['name'], ENT_QUOTES) . '"'
+                               . ' data-code="' . htmlspecialchars($item['item_code'], ENT_QUOTES) . '"'
+                               . '>'
+                               . '<div>'
+                               . '<div class="text-sm font-medium text-gray-800">' . htmlspecialchars($item['name']) . '</div>'
+                               . '<div class="text-xs text-gray-400">' . htmlspecialchars($item['item_code']) . '</div>'
+                               . '</div>'
+                               . '<span class="stock-pill ' . $pill . '">' . $pill_label . '</span>'
+                               . '</div>';
                         }
                     }
                     ?>
-                </select>
-                <p class="text-xs text-gray-400 mt-1" id="item_match_count"></p>
+                </div>
+
+                <!-- Hidden real select for form submission -->
+                <input type="hidden" name="item_id" id="item_id" required>
             </div>
 
-            <!-- Real-time stock badge -->
-            <div id="stock_display" class="hidden mb-6 p-4 rounded-lg border flex items-center gap-3">
-                <span class="text-sm font-semibold text-gray-600">Available Stock:</span>
-                <span id="stock_value" class="text-2xl font-bold"></span>
-                <span id="stock_unit" class="text-sm text-gray-500">units</span>
-                <span id="stock_warning" class="hidden ml-auto text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded">⚠ Quantity exceeds available stock</span>
-                <span id="stock_zero" class="hidden ml-auto text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-1 rounded">⚠ No stock available for this item</span>
-            </div>
+            <!-- RIGHT: Transaction Details -->
+            <div class="flex flex-col gap-6">
 
-            <div class="mb-6">
-                <label for="quantity_used" class="block text-gray-700 font-bold mb-2">Quantity Used</label>
-                <input type="number" id="quantity_used" name="quantity_used" min="1" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-            </div>
+                <!-- Selected Item Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                        </div>
+                        <h2 class="font-semibold text-gray-700">Step 2 — Selected Item</h2>
+                    </div>
 
-            <div class="mb-8">
-                <label for="transaction_date" class="block text-gray-700 font-bold mb-2">Date of Usage</label>
-                <input type="date" id="transaction_date" name="transaction_date" value="<?php echo date('Y-m-d'); ?>" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-            </div>
+                    <!-- Placeholder state -->
+                    <div id="no_selection" class="text-center py-6 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7"/></svg>
+                        <p class="text-sm">No item selected yet.<br>Search and click an item on the left.</p>
+                    </div>
 
-            <div class="flex items-center justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
-                    Record Transaction
-                </button>
-            </div>
-        </form>
-    </div>
+                    <!-- Selected info state -->
+                    <div id="item_info" class="hidden">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <p class="font-semibold text-gray-800" id="info_name"></p>
+                                <p class="text-xs text-gray-400 mt-0.5" id="info_code"></p>
+                            </div>
+                            <button type="button" id="clear_selection" class="text-xs text-gray-400 hover:text-red-500 transition ml-2">&#x2715; Clear</button>
+                        </div>
+                        <!-- Stock meter -->
+                        <div id="stock_display" class="rounded-lg p-4 flex items-center gap-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 mb-0.5">Available Stock</p>
+                                <p class="text-3xl font-bold" id="stock_value"></p>
+                                <p class="text-xs text-gray-400">units in store</p>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-2 rounded-full bg-gray-200 overflow-hidden">
+                                    <div id="stock_bar" class="h-2 rounded-full transition-all duration-500" style="width:0%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                    <span>0</span>
+                                    <span id="stock_bar_max"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="stock_zero_alert" class="hidden mt-2 text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded px-3 py-2">⚠ No stock available for this item. Recording usage will result in negative stock.</div>
+                        <div id="stock_over_alert" class="hidden mt-2 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">⚠ Quantity entered exceeds available stock.</div>
+                    </div>
+                </div>
+
+                <!-- Qty + Date card -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center gap-2 mb-5">
+                        <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h2 class="font-semibold text-gray-700">Step 3 — Usage Details</h2>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="quantity_used" class="block text-sm font-medium text-gray-700 mb-1.5">Quantity Used <span class="text-red-500">*</span></label>
+                        <input type="number" id="quantity_used" name="quantity_used" min="1" placeholder="Enter quantity"
+                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="transaction_date" class="block text-sm font-medium text-gray-700 mb-1.5">Date of Usage <span class="text-red-500">*</span></label>
+                        <input type="date" id="transaction_date" name="transaction_date" value="<?php echo date('Y-m-d'); ?>"
+                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                    </div>
+
+                    <button type="submit" id="submit_btn"
+                        class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow transition duration-200"
+                        disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Record Transaction
+                    </button>
+                </div>
+
+            </div><!-- end right col -->
+        </div><!-- end grid -->
+
+    </form>
 </div>
 
 <script>
 (function() {
-    var searchInput = document.getElementById('item_search');
-    var select      = document.getElementById('item_id');
-    var countLabel  = document.getElementById('item_match_count');
-    var allOptions  = Array.prototype.slice.call(select.querySelectorAll('option'));
+    var searchInput  = document.getElementById('item_search');
+    var countLabel   = document.getElementById('item_match_count');
+    var rows         = Array.prototype.slice.call(document.querySelectorAll('.item-option-row'));
+    var hiddenInput  = document.getElementById('item_id');
+    var qtyInput     = document.getElementById('quantity_used');
+    var submitBtn    = document.getElementById('submit_btn');
 
-    var qtyInput    = document.getElementById('quantity_used');
-    var stockBox    = document.getElementById('stock_display');
-    var stockVal    = document.getElementById('stock_value');
-    var stockWarn   = document.getElementById('stock_warning');
-    var stockZero   = document.getElementById('stock_zero');
+    var noSelection  = document.getElementById('no_selection');
+    var itemInfo     = document.getElementById('item_info');
+    var infoName     = document.getElementById('info_name');
+    var infoCode     = document.getElementById('info_code');
+    var stockDisplay = document.getElementById('stock_display');
+    var stockVal     = document.getElementById('stock_value');
+    var stockBar     = document.getElementById('stock_bar');
+    var stockBarMax  = document.getElementById('stock_bar_max');
+    var zeroAlert    = document.getElementById('stock_zero_alert');
+    var overAlert    = document.getElementById('stock_over_alert');
+
+    var step2Dot     = document.getElementById('step2_dot');
+    var step3Dot     = document.getElementById('step3_dot');
+    var line12       = document.getElementById('line12');
+    var line23       = document.getElementById('line23');
+
     var currentStock = 0;
+
+    function setStep(n) {
+        // step 1 dot stays active always
+        if (n >= 2) {
+            step2Dot.className = 'step-dot active';
+            line12.className   = 'step-line done';
+        } else {
+            step2Dot.className = 'step-dot idle';
+            line12.className   = 'step-line';
+        }
+        if (n >= 3) {
+            step3Dot.className = 'step-dot active';
+            line23.className   = 'step-line done';
+        } else {
+            step3Dot.className = 'step-dot idle';
+            line23.className   = 'step-line';
+        }
+    }
 
     function showStock(stock) {
         currentStock = parseInt(stock, 10);
-        stockBox.classList.remove('hidden');
         stockVal.textContent = currentStock;
-        // Colour the badge based on level
-        stockBox.className = stockBox.className.replace(/border-\S+|bg-\S+/g, '');
+        stockBarMax.textContent = Math.max(currentStock, 1);
+
+        // Bar width capped at 100%
+        var pct = currentStock > 0 ? Math.min(100, currentStock) : 0;
+        stockBar.style.width = pct + '%';
+
+        // Colours
+        stockDisplay.className = 'rounded-lg p-4 flex items-center gap-4 ';
         if (currentStock === 0) {
-            stockBox.classList.add('border-orange-300', 'bg-orange-50');
-            stockVal.className = 'text-2xl font-bold text-orange-600';
-            stockZero.classList.remove('hidden');
-            stockWarn.classList.add('hidden');
+            stockDisplay.className += 'bg-red-50';
+            stockVal.className = 'text-3xl font-bold text-red-600';
+            stockBar.className = 'h-2 rounded-full transition-all duration-500 bg-red-400';
+            zeroAlert.classList.remove('hidden');
         } else if (currentStock <= 10) {
-            stockBox.classList.add('border-yellow-300', 'bg-yellow-50');
-            stockVal.className = 'text-2xl font-bold text-yellow-600';
-            stockZero.classList.add('hidden');
+            stockDisplay.className += 'bg-yellow-50';
+            stockVal.className = 'text-3xl font-bold text-yellow-600';
+            stockBar.className = 'h-2 rounded-full transition-all duration-500 bg-yellow-400';
+            zeroAlert.classList.add('hidden');
         } else {
-            stockBox.classList.add('border-green-300', 'bg-green-50');
-            stockVal.className = 'text-2xl font-bold text-green-600';
-            stockZero.classList.add('hidden');
+            stockDisplay.className += 'bg-green-50';
+            stockVal.className = 'text-3xl font-bold text-green-600';
+            stockBar.className = 'h-2 rounded-full transition-all duration-500 bg-green-500';
+            zeroAlert.classList.add('hidden');
         }
         checkQty();
     }
 
     function checkQty() {
         var qty = parseInt(qtyInput.value, 10);
-        if (!isNaN(qty) && qty > currentStock && currentStock > 0) {
-            stockWarn.classList.remove('hidden');
+        if (!isNaN(qty) && qty > 0 && currentStock > 0 && qty > currentStock) {
+            overAlert.classList.remove('hidden');
         } else {
-            stockWarn.classList.add('hidden');
+            overAlert.classList.add('hidden');
         }
     }
 
-    // Remove the placeholder once user starts typing
-    var placeholder = select.querySelector('option[value=""]');
+    function selectItem(row) {
+        // Clear previous selection highlight
+        rows.forEach(function(r) { r.classList.remove('selected'); });
+        row.classList.add('selected');
 
+        var id    = row.getAttribute('data-id');
+        var name  = row.getAttribute('data-name');
+        var code  = row.getAttribute('data-code');
+        var stock = row.getAttribute('data-stock');
+
+        hiddenInput.value  = id;
+        infoName.textContent = name;
+        infoCode.textContent = code;
+
+        noSelection.classList.add('hidden');
+        itemInfo.classList.remove('hidden');
+        submitBtn.disabled = false;
+
+        showStock(stock);
+        setStep(2);
+
+        // Scroll row into view
+        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    // Click select
+    rows.forEach(function(row) {
+        row.addEventListener('click', function() { selectItem(row); });
+    });
+
+    // Search filter
     searchInput.addEventListener('input', function() {
-        var query = this.value.toLowerCase().trim();
+        var query   = this.value.toLowerCase().trim();
         var visible = 0;
 
-        allOptions.forEach(function(opt) {
-            if (!opt.value) { // placeholder
-                opt.style.display = query ? 'none' : '';
-                return;
-            }
-            var label = opt.getAttribute('data-label') || '';
+        rows.forEach(function(row) {
+            var label = row.getAttribute('data-label') || '';
             var match = !query || label.indexOf(query) !== -1;
-            opt.style.display = match ? '' : 'none';
+            row.style.display = match ? '' : 'none';
             if (match) visible++;
         });
 
         countLabel.textContent = query ? visible + ' item(s) found' : '';
 
-        // Auto-select if only one match
+        // Auto-select single match
         if (visible === 1) {
-            allOptions.forEach(function(opt) {
-                if (opt.value && opt.style.display !== 'none') {
-                    select.value = opt.value;
-                    showStock(opt.getAttribute('data-stock') || 0);
-                    searchInput.value = opt.text;
-                }
+            rows.forEach(function(row) {
+                if (row.style.display !== 'none') { selectItem(row); }
             });
         }
     });
 
-    // Show stock when user selects an item
-    select.addEventListener('change', function() {
-        var chosen = select.options[select.selectedIndex];
-        if (chosen && chosen.value) {
-            searchInput.value = chosen.text;
-            showStock(chosen.getAttribute('data-stock') || 0);
-        } else {
-            stockBox.classList.add('hidden');
+    // Qty validation
+    qtyInput.addEventListener('input', function() {
+        checkQty();
+        if (hiddenInput.value && this.value > 0) {
+            setStep(3);
+            step3Dot.className = 'step-dot active';
         }
     });
 
-    // Re-validate quantity when user types
-    qtyInput.addEventListener('input', checkQty);
+    // Clear selection
+    document.getElementById('clear_selection').addEventListener('click', function() {
+        rows.forEach(function(r) { r.classList.remove('selected'); });
+        hiddenInput.value = '';
+        submitBtn.disabled = true;
+        noSelection.classList.remove('hidden');
+        itemInfo.classList.add('hidden');
+        searchInput.value = '';
+        countLabel.textContent = '';
+        rows.forEach(function(r) { r.style.display = ''; });
+        setStep(1);
+        overAlert.classList.add('hidden');
+        zeroAlert.classList.add('hidden');
+    });
 })();
 </script>
 
