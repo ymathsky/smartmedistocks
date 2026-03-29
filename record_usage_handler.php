@@ -1,5 +1,6 @@
 <?php
 // Filename: record_usage_handler.php
+ob_start(); // Buffer output so any stray echo from included scripts never breaks the redirect
 
 session_start();
 require_once 'db_connection.php';
@@ -124,6 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // FINAL REDIRECT
+    ob_end_clean(); // Discard any stray output before redirecting
     header("Location: record_usage.php");
     exit();
 

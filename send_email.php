@@ -70,5 +70,4 @@ function send_alert_email($to, $subject, $message) {
         return false;
     }
 }
-?>
 

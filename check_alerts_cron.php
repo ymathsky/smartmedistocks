@@ -329,4 +329,3 @@ if (!empty($all_alerts_found)) {
 
 // Do not close the connection if this script is included by another
 // $conn->close();
-?>
