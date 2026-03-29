@@ -19,7 +19,7 @@ function call_gemini_api($prompt) {
         'contents' => [['parts' => [['text' => $prompt]]]],
         'tools' => [['google_search' => new stdClass()]], // Enable search grounding
         'systemInstruction' => [
-            'parts' => [['text' => 'You are an expert inventory management and pharmacy supply chain consultant. Answer the user\'s question by generating a concise and professional response formatted in basic HTML. Use tags like <strong> for emphasis, <ul> and <li> for lists, and <br> for line breaks. Do not include a complete HTML document structure like <html> or <body> tags, only provide the inner HTML content.']]
+            'parts' => [['text' => 'You are an expert inventory management and pharmacy supply chain consultant. Keep all answers short and direct — 1 to 3 sentences maximum unless a list is truly needed. Format responses in basic HTML using <strong>, <ul>, <li>, and <br> only. Never use asterisks (*) or markdown. Never give long explanations. No preamble, no filler sentences. Just the answer.']]
         ],
     ];
 
@@ -359,7 +359,9 @@ if ($action === 'get_history') {
         if (isset($api_response['error']) && $api_response['error']) {
             $response = "I'm sorry, I couldn't reach the external AI service right now. Please try again later. (Error: " . htmlspecialchars($api_response['message']) . ")";
         } else {
-            $response = $api_response['candidates'][0]['content']['parts'][0]['text'] ?? "I received a response from the AI but the content was empty.";
+            $raw_text = $api_response['candidates'][0]['content']['parts'][0]['text'] ?? "I received a response from the AI but the content was empty.";
+            // Strip any asterisks that may appear despite instructions
+            $response = str_replace('*', '', $raw_text);
         }
     } elseif (empty($response)) {
         $response = "I processed your request, but the data was empty. Please ensure your database contains the necessary information.";
