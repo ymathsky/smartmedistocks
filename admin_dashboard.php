@@ -312,7 +312,15 @@ $turnover_chart_data = [
             <canvas id="categoryValueChart" height="190"></canvas>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p class="section-title mb-4">Daily Item Usage &mdash; Last 14 Days</p>
+            <div class="flex items-center justify-between mb-3">
+                <p class="section-title">Daily Item Usage</p>
+                <select id="usageDateRange" class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400 bg-gray-50">
+                    <option value="7">Last 7 Days</option>
+                    <option value="14" selected>Last 14 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+            </div>
             <canvas id="usageTrendChart" height="190"></canvas>
         </div>
     </div>
@@ -477,8 +485,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    let usageChart = null;
     if (usageData.labels.length > 0) {
-        new Chart(document.getElementById('usageTrendChart').getContext('2d'), {
+        usageChart = new Chart(document.getElementById('usageTrendChart').getContext('2d'), {
             type: 'line',
             data: {
                 labels: usageData.labels,
@@ -494,6 +503,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    document.getElementById('usageDateRange').addEventListener('change', function() {
+        const days = parseInt(this.value);
+        fetch('get_usage_trend_data.php?days=' + days)
+            .then(r => r.json())
+            .then(data => {
+                if (!usageChart) return;
+                usageChart.data.labels = data.labels;
+                usageChart.data.datasets[0].data = data.values;
+                usageChart.update();
+            })
+            .catch(() => {});
+    });
 
     const turnoverData = <?php echo json_encode($turnover_chart_data); ?>;
     if (turnoverData.labels.length > 0) {
