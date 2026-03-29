@@ -55,7 +55,8 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Admin', 'Pharmac
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Date</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Item Code</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Item Name</th>
-                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Quantity Used</th>
+                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Qty</th>
+                    <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Type</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-center">Actions</th>
                 </tr>
                 </thead>

@@ -139,6 +139,15 @@
                     { "data": "item_name" },
                     { "data": "quantity_used", "className": "text-right" },
                     {
+                        "data": "transaction_type",
+                        "render": function(data) {
+                            if (data === 'Wastage Write-off') {
+                                return '<span class="inline-block bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">' + data + '</span>';
+                            }
+                            return '<span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">' + data + '</span>';
+                        }
+                    },
+                    {
                         "data": "actions", // Placeholder column
                         "orderable": false,
                         "searchable": false,
@@ -150,7 +159,7 @@
                 "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
                 "createdRow": function( row, data, dataIndex ) {
                     // Inject real action buttons/forms after row creation using AJAX data
-                    let actionsCell = $('td', row).eq(4); // Get the 5th cell (index 4)
+                    let actionsCell = $('td', row).eq(5); // Get the 6th cell (index 5) — after type column
                     if (data.transaction_id) { // Check if transaction_id exists in the data
                         actionsCell.html(`
                             <a href="edit_transaction.php?id=${data.transaction_id}" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-4">Edit</a>
