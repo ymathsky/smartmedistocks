@@ -115,16 +115,25 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
         }
         table.dataTable { border-collapse: collapse !important; }
         table.dataTable thead th {
-            background: #f8fafc !important; color: #475569 !important;
+            background-color: #f8fafc !important; color: #475569 !important;
             font-size: .7rem !important; font-weight: 700 !important;
             text-transform: uppercase; letter-spacing: .05em;
-            border-bottom: 2px solid #e2e8f0 !important; padding: .7rem 1rem !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+            padding: .7rem 2.5rem .7rem 1rem !important;
+            position: relative;
+        }
+        /* Keep DataTables sort arrows but reposition cleanly */
+        table.dataTable thead th.sorting,
+        table.dataTable thead th.sorting_asc,
+        table.dataTable thead th.sorting_desc {
+            background-position: right .75rem center !important;
+            background-size: 10px !important;
         }
         table.dataTable tbody td {
             padding: .75rem 1rem !important; font-size: .875rem !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
-        table.dataTable tbody tr:hover > td { background: #f8fafc !important; }
+        table.dataTable tbody tr:hover > td { background-color: #f8fafc !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">

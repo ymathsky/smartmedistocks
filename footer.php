@@ -65,8 +65,6 @@
     </div>
 </div><!-- End AI Chat Widget -->
 
-</div> <!-- This closes the flex-1 div from header.php -->
-</div> <!-- This closes the flex h-screen div from header.php -->
 
 <!-- JavaScript Includes -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -80,8 +78,7 @@
     jQuery(document).ready(function($) { // Use jQuery() and pass $
         const commonDataTablesOptions = {
             "pagingType": "full_numbers",
-            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
-            "responsive": true // Optional: Add responsiveness
+            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ]
         };
 
         // Initialize common tables if they exist
@@ -109,6 +106,9 @@
                 ...commonDataTablesOptions,
                 "columnDefs": [ { "orderable": false, "targets": 3 } ] // Disable sort on Actions
             });
+        }
+        if ($('#itemSelectionTable').length && !$.fn.DataTable.isDataTable('#itemSelectionTable')) {
+            $('#itemSelectionTable').DataTable({ ...commonDataTablesOptions, "order": [[ 0, "asc" ]] });
         }
         if ($('#batchesTable').length && !$.fn.DataTable.isDataTable('#batchesTable')) {
             $('#batchesTable').DataTable(commonDataTablesOptions); // Default order likely fine

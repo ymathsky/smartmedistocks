@@ -84,19 +84,6 @@ $result = $conn->query($sql);
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-<script>
-    // Initialize DataTables
-    $(document).ready(function() {
-        $('#itemSelectionTable').DataTable({
-            "pagingType": "full_numbers",
-            "order": [[0, "asc"]],
-            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ]
-        });
-    });
-</script>
-
 <?php
 $conn->close();
 require_once 'footer.php';

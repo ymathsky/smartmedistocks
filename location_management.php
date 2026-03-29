@@ -212,22 +212,7 @@ if ($result && $result->num_rows > 0) {
     </div>
 </div>
 
-<!-- JQUERY AND DATATABLES SCRIPTS ADDED HERE -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-
 <script>
-    // Initialize DataTables
-    $(document).ready(function() {
-        $('#locationTable').DataTable({
-            "pagingType": "simple_numbers",
-            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
-            "columnDefs": [
-                { "orderable": false, "targets": 3 } // Disable sorting on the Actions column
-            ]
-        });
-    });
-
     const editModal = document.getElementById('editModal');
     const editLocationId = document.getElementById('edit_location_id');
     const editName = document.getElementById('edit_name');
@@ -246,11 +231,8 @@ if ($result && $result->num_rows > 0) {
         editModal.classList.add('hidden');
     }
 
-    // Close modal when clicking outside
     editModal.addEventListener('click', function(event) {
-        if (event.target === editModal) {
-            closeEditModal();
-        }
+        if (event.target === editModal) { closeEditModal(); }
     });
 </script>
 
