@@ -74,17 +74,24 @@ while ($item = $items_result->fetch_assoc()) {
 }
 $stmt->close();
 
-// --- 3. Fetch data for Slow-Moving Items (used less than 10 units in last 90 days) ---
+// --- 3. Fetch data for Slow-Moving Items ---
+$sm_days      = max(1, (int)($settings['slow_moving_days']      ?? 90));
+$sm_threshold = max(1, (int)($settings['slow_moving_threshold'] ?? 10));
+$sm_days_ago  = date('Y-m-d', strtotime("-{$sm_days} days"));
 $slow_moving_sql = "
     SELECT i.name, i.item_code, COALESCE(SUM(t.quantity_used), 0) AS usage_90_days
     FROM items i
-    LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+    LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ?
     GROUP BY i.item_id
-    HAVING usage_90_days < 10 AND (SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active') > 0
+    HAVING usage_90_days < {$sm_threshold} AND (SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active') > 0
     ORDER BY usage_90_days ASC
     LIMIT 10;
 ";
-$slow_moving_result = $conn->query($slow_moving_sql);
+$stmt_slow = $conn->prepare($slow_moving_sql);
+$stmt_slow->bind_param("s", $sm_days_ago);
+$stmt_slow->execute();
+$slow_moving_result = $stmt_slow->get_result();
+$stmt_slow->close();
 
 // --- 4. Fetch data for Supplier Lead Time Performance ---
 $supplier_performance_sql = "

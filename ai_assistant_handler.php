@@ -269,13 +269,16 @@ if ($action === 'get_history') {
         $stmt->close();
     } elseif (strpos($user_message, 'slow-moving') !== false || strpos($user_message, 'not been used') !== false) {
         $is_internal_query = true;
-        $slow_moving_sql = "SELECT i.name, i.item_code, COALESCE(SUM(t.quantity_used), 0) AS usage_90_days, COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock FROM items i LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ? GROUP BY i.item_id, i.name, i.item_code HAVING usage_90_days < 10 AND current_stock > 0 ORDER BY usage_90_days ASC LIMIT 10;";
+        $sm_days      = max(1, (int)($settings['slow_moving_days']      ?? 90));
+        $sm_threshold = max(1, (int)($settings['slow_moving_threshold'] ?? 10));
+        $sm_days_ago  = date('Y-m-d', strtotime("-{$sm_days} days"));
+        $slow_moving_sql = "SELECT i.name, i.item_code, COALESCE(SUM(t.quantity_used), 0) AS usage_90_days, COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock FROM items i LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ? GROUP BY i.item_id, i.name, i.item_code HAVING usage_90_days < {$sm_threshold} AND current_stock > 0 ORDER BY usage_90_days ASC LIMIT 10;";
         $stmt = $conn->prepare($slow_moving_sql);
-        $stmt->bind_param("s", $ninety_days_ago);
+        $stmt->bind_param("s", $sm_days_ago);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
-            $response = "The following items are considered slow-moving because less than 10 units were used in the past 90 days:<br><br><ul>";
+            $response = "The following items are considered slow-moving because fewer than {$sm_threshold} units were used in the past {$sm_days} days:<br><br><ul>";
             while ($row = $result->fetch_assoc()) {
                 $response .= "<li><strong>" . htmlspecialchars($row['name']) . "</strong> (" . htmlspecialchars($row['item_code']) . ") has " . $row['current_stock'] . " units in stock, but only " . $row['usage_90_days'] . " have been used recently.</li>";
             }

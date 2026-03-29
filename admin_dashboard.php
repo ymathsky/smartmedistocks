@@ -67,6 +67,9 @@ $stmt_rop->close();
 
 
 // 3. Count of Slow-Moving Items
+$sm_days      = max(1, (int)($settings['slow_moving_days']      ?? 90));
+$sm_threshold = max(1, (int)($settings['slow_moving_threshold'] ?? 10));
+$sm_days_ago  = date('Y-m-d', strtotime("-{$sm_days} days"));
 $slow_moving_sql = "
     SELECT COUNT(*) as slow_count
     FROM (
@@ -78,11 +81,11 @@ $slow_moving_sql = "
             WHERE transaction_date >= ?
             GROUP BY item_id
         ) as t ON i.item_id = t.item_id
-        WHERE COALESCE(t.total_usage, 0) < 10
+        WHERE COALESCE(t.total_usage, 0) < {$sm_threshold}
     ) as slow_items
 ";
 $stmt_slow = $conn->prepare($slow_moving_sql);
-$stmt_slow->bind_param("s", $ninety_days_ago);
+$stmt_slow->bind_param("s", $sm_days_ago);
 $stmt_slow->execute();
 $slow_moving_count = $stmt_slow->get_result()->fetch_assoc()['slow_count'] ?? 0;
 $stmt_slow->close();
