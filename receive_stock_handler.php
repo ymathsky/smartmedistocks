@@ -50,9 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $log_details = "Received $quantity_received units for item ID $item_id at location ID $location_id. PO: " . ($purchase_order_id ?? 'N/A');
 
-        // 2. If a PO number is provided, update its status to 'Received'
+        // 2. If a PO number is provided, update its status to 'Received' and record actual delivery date
         if ($purchase_order_id) {
-            $stmt_po_update = $conn->prepare("UPDATE purchase_orders SET status = 'Received' WHERE po_number = ?");
+            $stmt_po_update = $conn->prepare("UPDATE purchase_orders SET status = 'Received', actual_delivery_date = CURDATE() WHERE po_number = ?");
             $stmt_po_update->bind_param("s", $purchase_order_id);
 
             if (!$stmt_po_update->execute()) {

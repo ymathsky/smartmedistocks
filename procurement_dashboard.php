@@ -88,14 +88,15 @@ $slow_moving_result = $conn->query($slow_moving_sql);
 
 // --- 4. Fetch data for Supplier Lead Time Performance ---
 $supplier_performance_sql = "
-    SELECT 
+    SELECT
         s.name,
-        AVG(DATEDIFF(ib.received_date, ib.expected_delivery_date)) as avg_delivery_variance,
-        COUNT(ib.batch_id) as total_deliveries
+        COUNT(po.po_id) as total_deliveries,
+        AVG(DATEDIFF(po.actual_delivery_date, po.expected_delivery_date)) as avg_delivery_variance
     FROM suppliers s
-    JOIN items i ON s.supplier_id = i.supplier_id
-    JOIN item_batches ib ON i.item_id = ib.item_id
-    WHERE ib.expected_delivery_date IS NOT NULL AND ib.received_date IS NOT NULL
+    JOIN purchase_orders po ON s.supplier_id = po.supplier_id
+    WHERE po.status = 'Received'
+      AND po.actual_delivery_date IS NOT NULL
+      AND po.expected_delivery_date IS NOT NULL
     GROUP BY s.supplier_id
     ORDER BY avg_delivery_variance DESC;
 ";

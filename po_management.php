@@ -13,7 +13,8 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Admin', 'Procure
 // Fetch all POs with associated item and supplier data
 $sql = "
     SELECT 
-        po.po_id, po.po_number, po.quantity_ordered, po.unit_cost_agreed, po.expected_delivery_date, 
+        po.po_id, po.po_number, po.quantity_ordered, po.unit_cost_agreed, po.expected_delivery_date,
+        po.actual_delivery_date,
         po.status, po.created_at, po.external_reference,
         i.name as item_name, i.item_code,
         s.name as supplier_name,
@@ -88,6 +89,7 @@ function get_status_badge($status) {
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Supplier</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Total Cost</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Expected Delivery</th>
+                    <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Actual / Variance</th>
                     <th class="py-3 px-4 uppercase font-semibold text-sm text-center">Actions</th>
                 </tr>
                 </thead>
@@ -102,7 +104,22 @@ function get_status_badge($status) {
                             <td class="py-3 px-4 text-sm"><?php echo htmlspecialchars($row['item_name']); ?> (<?php echo $row['quantity_ordered']; ?>)</td>
                             <td class="py-3 px-4 text-sm"><?php echo htmlspecialchars($row['supplier_name']); ?></td>
                             <td class="py-3 px-4 text-right font-bold">₱<?php echo number_format($total_cost, 2); ?></td>
-                            <td class="py-3 px-4 text-sm font-semibold"><?php echo htmlspecialchars(date("M j, Y", strtotime($row['expected_delivery_date']))); ?></td>
+                            <td class="py-3 px-4 text-sm font-semibold"><?php echo htmlspecialchars(date('M j, Y', strtotime($row['expected_delivery_date']))); ?></td>
+                            <td class="py-3 px-4 text-sm">
+                                <?php if ($row['actual_delivery_date']): ?>
+                                    <?php
+                                        $variance = (int)((strtotime($row['actual_delivery_date']) - strtotime($row['expected_delivery_date'])) / 86400);
+                                        $vSign = $variance > 0 ? '+' : '';
+                                        $vClass = $variance > 3 ? 'text-red-600' : ($variance > 0 ? 'text-yellow-600' : 'text-green-600');
+                                    ?>
+                                    <div class="font-semibold"><?php echo date('M j, Y', strtotime($row['actual_delivery_date'])); ?></div>
+                                    <div class="text-xs <?php echo $vClass; ?> font-semibold">
+                                        <?php echo $vSign . $variance; ?> day<?php echo abs($variance) !== 1 ? 's' : ''; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-gray-400 text-xs">Pending</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
 
                                 <!-- NEW: Print PO Button -->
