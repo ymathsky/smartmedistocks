@@ -26,7 +26,10 @@ $gitignore = file_get_contents(__DIR__ . '/.gitignore');
 $checks['db_connection.php in .gitignore'] = strpos($gitignore, 'db_connection.php') !== false ? 'PASS' : 'FAIL: Not ignored';
 
 // Output
-$all_pass = !in_array(false, array_map(fn($v) => str_starts_with($v, 'PASS'), $checks));
+$all_pass = true;
+foreach ($checks as $v) {
+    if (substr($v, 0, 4) !== 'PASS') { $all_pass = false; break; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,9 +45,9 @@ $all_pass = !in_array(false, array_map(fn($v) => str_starts_with($v, 'PASS'), $c
 
         <div class="space-y-3">
             <?php foreach ($checks as $label => $result): ?>
-                <div class="flex items-center justify-between p-3 rounded-lg <?php echo str_starts_with($result, 'PASS') ? 'bg-green-50' : 'bg-red-50'; ?>">
+                    <div class="flex items-center justify-between p-3 rounded-lg <?php echo substr($result, 0, 4) === 'PASS' ? 'bg-green-50' : 'bg-red-50'; ?>">
                     <span class="font-medium text-gray-700"><?php echo htmlspecialchars($label); ?></span>
-                    <span class="font-bold <?php echo str_starts_with($result, 'PASS') ? 'text-green-600' : 'text-red-600'; ?>">
+                    <span class="font-bold <?php echo substr($result, 0, 4) === 'PASS' ? 'text-green-600' : 'text-red-600'; ?>">
                         <?php echo htmlspecialchars($result); ?>
                     </span>
                 </div>
