@@ -196,6 +196,48 @@ $usage_chart_data = [
     'values' => array_values($usage_values),
 ];
 
+// 3. Monthly Inventory Turnover Trend (Last 6 months)
+// Turnover Rate = Monthly COGS / (Current Inventory Value / 12) — an annualised index
+$turnover_sql = "
+    SELECT
+        DATE_FORMAT(t.transaction_date, '%Y-%m') AS month_key,
+        DATE_FORMAT(t.transaction_date, '%b %Y') AS month_label,
+        SUM(t.quantity_used * i.unit_cost) AS monthly_cogs
+    FROM transactions t
+    JOIN items i ON t.item_id = i.item_id
+    WHERE t.transaction_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 MONTH), '%Y-%m-01')
+    GROUP BY month_key, month_label
+    ORDER BY month_key ASC
+";
+$turnover_result = $conn->query($turnover_sql);
+$turnover_kv_labels = [];
+$turnover_cogs_map  = [];
+$turnover_rates_map = [];
+$monthly_avg_inv    = $total_inventory_value > 0 ? ($total_inventory_value / 12.0) : 1;
+for ($i = 5; $i >= 0; $i--) {
+    $m   = new DateTime();
+    $m->modify("-{$i} months");
+    $key = $m->format('Y-m');
+    $turnover_kv_labels[$key] = $m->format('M Y');
+    $turnover_cogs_map[$key]  = 0;
+    $turnover_rates_map[$key] = 0;
+}
+if ($turnover_result) {
+    while ($row = $turnover_result->fetch_assoc()) {
+        $k = $row['month_key'];
+        if (isset($turnover_cogs_map[$k])) {
+            $cogs = (float)$row['monthly_cogs'];
+            $turnover_cogs_map[$k]  = $cogs;
+            $turnover_rates_map[$k] = round($cogs / $monthly_avg_inv, 2);
+        }
+    }
+}
+$turnover_chart_data = [
+    'labels' => array_values($turnover_kv_labels),
+    'cogs'   => array_values($turnover_cogs_map),
+    'rates'  => array_values($turnover_rates_map),
+];
+
 ?>
 <link rel="stylesheet" href="dashboard.css">
 
@@ -270,6 +312,13 @@ $usage_chart_data = [
             <p class="section-title mb-4">Daily Item Usage &mdash; Last 14 Days</p>
             <canvas id="usageTrendChart" height="190"></canvas>
         </div>
+    </div>
+
+    <!-- Monthly Inventory Turnover Trend -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-7">
+        <p class="section-title mb-1">Monthly Inventory Turnover &mdash; Last 6 Months</p>
+        <p class="text-xs text-gray-400 mb-4">Bars = monthly cost of goods dispensed &nbsp;|&nbsp; Line = turnover rate (monthly COGS &divide; avg. monthly inventory value)</p>
+        <canvas id="turnoverTrendChart" height="90"></canvas>
     </div>
 
     <!-- Warehouse Overview -->
@@ -437,6 +486,70 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    const turnoverData = <?php echo json_encode($turnover_chart_data); ?>;
+    if (turnoverData.labels.length > 0) {
+        new Chart(document.getElementById('turnoverTrendChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: turnoverData.labels,
+                datasets: [
+                    {
+                        label: 'Monthly COGS (\u20b1)',
+                        data: turnoverData.cogs,
+                        backgroundColor: 'rgba(59,130,246,0.15)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                        order: 2,
+                    },
+                    {
+                        label: 'Turnover Rate (x)',
+                        data: turnoverData.rates,
+                        type: 'line',
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#10b981',
+                        yAxisID: 'y1',
+                        order: 1,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, padding: 14 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) {
+                                if (c.datasetIndex === 0) return ' COGS: \u20b1' + Number(c.raw).toLocaleString('en-PH', {minimumFractionDigits:2});
+                                return ' Turnover Rate: ' + c.raw + 'x';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        position: 'left',
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        ticks: { font: { size: 11 }, callback: v => '\u20b1' + Number(v).toLocaleString('en-PH', {minimumFractionDigits:0}) }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        ticks: { font: { size: 11 }, callback: v => v + 'x' }
+                    },
                     x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
             }
