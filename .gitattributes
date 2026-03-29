@@ -1,0 +1,12 @@
+# Normalize line endings: commit as LF, checkout as-is on Linux (cPanel)
+* text=auto eol=lf
+
+# Binary files - no line ending conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.pdf binary
+*.zip binary
