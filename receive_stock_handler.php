@@ -82,6 +82,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $notif_msg = "Stock Received: {$quantity_received} unit(s) of '{$item_name}' have been received and added to '{$location_name}'.";
         if ($purchase_order_id) $notif_msg .= " (PO: {$purchase_order_id})";
         notify_by_role($conn, $notif_msg, ['Admin', 'Procurement']);
+
+    } catch (Exception $e) {
         $conn->rollback();
         $_SESSION['error'] = "Transaction failed: " . $e->getMessage();
     }

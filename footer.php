@@ -8,7 +8,7 @@
 </main> <!-- Closes the main tag from header.php -->
 
 <!-- Application Footer -->
-<footer class="text-center text-sm text-gray-600 py-4 mt-auto border-t border-gray-200 bg-gray-50">
+<footer class="text-center text-sm text-slate-400 py-4 border-t border-slate-200 bg-white">
     &copy; <?php echo date("Y"); ?> Smart Medi Stocks. All rights reserved. |
     <a href="terms.php" class="text-blue-600 hover:underline" target="_blank">Terms of Use</a> |
     <a href="privacy.php" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>
