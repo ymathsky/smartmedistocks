@@ -10,6 +10,10 @@ uploads/
 db_connection.php
 smart/db_connection.php
 
+# ---- API keys / app secrets ----
+config.php
+smart/config.php
+
 # ---- Environment / secrets (add if you use these) ----
 .env
 .env.local

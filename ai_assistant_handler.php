@@ -3,11 +3,8 @@
 
 header('Content-Type: application/json');
 require_once 'db_connection.php'; // Ensure connection is established first
+require_once 'config.php';         // API keys — gitignored, never committed
 session_start();
-
-// --- GEMINI API CONFIGURATION ---
-const GEMINI_API_KEY = "AIzaSyDysCZInycPYuo34j12-W-fABBc7JM_Ki4"; // Replace with your actual key if needed
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"; // Update if needed
 
 /**
  * Calls the Gemini API using PHP cURL with Google Search grounding.
