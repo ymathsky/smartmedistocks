@@ -23,8 +23,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $supplier_id = filter_input(INPUT_POST, 'supplier_id', FILTER_VALIDATE_INT);
     $name = trim($_POST['supplier_name']);
     $contact = trim($_POST['contact_info']);
+    $email = trim($_POST['supplier_email'] ?? '');
     $address = trim($_POST['address']); // NEW
     $lead_time = filter_input(INPUT_POST, 'lead_time', FILTER_VALIDATE_INT);
+
+    // Validate email if provided
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['error'] = "Invalid email address provided.";
+        header("Location: edit_supplier.php?id=" . intval($supplier_id));
+        exit();
+    }
 
     if (!$supplier_id || empty($name) || empty($address) || $lead_time === false || $lead_time < 1) {
         $_SESSION['error'] = "Invalid input provided. Please ensure the name, address, and lead time are valid.";
@@ -32,9 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // UPDATED SQL: Update the new 'address' column
-    $stmt = $conn->prepare("UPDATE suppliers SET name = ?, contact_info = ?, address = ?, average_lead_time_days = ? WHERE supplier_id = ?");
-    $stmt->bind_param("sssii", $name, $contact, $address, $lead_time, $supplier_id);
+    // UPDATED SQL: Update the new 'address' and 'email' columns
+    $stmt = $conn->prepare("UPDATE suppliers SET name = ?, contact_info = ?, email = ?, address = ?, average_lead_time_days = ? WHERE supplier_id = ?");
+    $stmt->bind_param("ssssii", $name, $contact, $email, $address, $lead_time, $supplier_id);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = "Supplier '" . htmlspecialchars($name) . "' updated successfully.";

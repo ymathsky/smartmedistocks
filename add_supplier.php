@@ -30,8 +30,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
                 <input type="text" id="supplier_name" name="supplier_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
             </div>
             <div class="mb-4">
-                <label for="contact_info" class="block text-gray-700 text-sm font-bold mb-2">Contact Info (Email/Phone):</label>
+                <label for="contact_info" class="block text-gray-700 text-sm font-bold mb-2">Contact Info (Phone/Other):</label>
                 <input type="text" id="contact_info" name="contact_info" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-4">
+                <label for="supplier_email" class="block text-gray-700 text-sm font-bold mb-2">Supplier Email:</label>
+                <input type="email" id="supplier_email" name="supplier_email" placeholder="orders@supplier.com" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <p class="text-gray-600 text-xs italic mt-1">Used to send Purchase Orders directly to this supplier.</p>
             </div>
             <!-- NEW: Supplier Address Field -->
             <div class="mb-4">

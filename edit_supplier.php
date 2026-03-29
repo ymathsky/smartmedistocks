@@ -16,8 +16,8 @@ if (!$supplier_id) {
     exit();
 }
 
-// UPDATED SQL: Select the new 'address' column
-$stmt = $conn->prepare("SELECT name, contact_info, address, average_lead_time_days FROM suppliers WHERE supplier_id = ?");
+// UPDATED SQL: Select the new 'address' and 'email' columns
+$stmt = $conn->prepare("SELECT name, contact_info, email, address, average_lead_time_days FROM suppliers WHERE supplier_id = ?");
 $stmt->bind_param("i", $supplier_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -44,8 +44,13 @@ $stmt->close();
                 <input type="text" id="supplier_name" name="supplier_name" value="<?php echo htmlspecialchars($supplier['name']); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
             </div>
             <div class="mb-4">
-                <label for="contact_info" class="block text-gray-700 text-sm font-bold mb-2">Contact Info:</label>
+                <label for="contact_info" class="block text-gray-700 text-sm font-bold mb-2">Contact Info (Phone/Other):</label>
                 <input type="text" id="contact_info" name="contact_info" value="<?php echo htmlspecialchars($supplier['contact_info']); ?>" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-4">
+                <label for="supplier_email" class="block text-gray-700 text-sm font-bold mb-2">Supplier Email:</label>
+                <input type="email" id="supplier_email" name="supplier_email" value="<?php echo htmlspecialchars($supplier['email'] ?? ''); ?>" placeholder="orders@supplier.com" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <p class="text-gray-600 text-xs italic mt-1">Used to send Purchase Orders directly to this supplier.</p>
             </div>
             <!-- NEW: Supplier Address Field -->
             <div class="mb-4">

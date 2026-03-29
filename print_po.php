@@ -33,7 +33,7 @@ $sql = "
         po.po_id, po.po_number, po.quantity_ordered, po.unit_cost_agreed, 
         po.expected_delivery_date, po.status, po.created_at, po.external_reference,
         i.name as item_name, i.item_code, i.unit_of_measure,
-        s.name as supplier_name, s.contact_info as supplier_contact, s.address as supplier_address, 
+        s.name as supplier_name, s.contact_info as supplier_contact, s.address as supplier_address, s.email as supplier_email,
         u.username as created_by
     FROM 
         purchase_orders po
@@ -115,6 +115,13 @@ $total_cost = $po_data['quantity_ordered'] * $po_data['unit_cost_agreed'];
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-xl po-document">
+
+    <?php if (isset($_SESSION['message'])): ?>
+    <div class="no-print mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"><?php echo htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+    <div class="no-print mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
 
     <!-- Header & PO Number -->
     <div class="flex justify-between items-start border-b-4 border-blue-600 pb-4 mb-6">
@@ -213,13 +220,26 @@ $total_cost = $po_data['quantity_ordered'] * $po_data['unit_cost_agreed'];
     </div>
 
     <!-- Print Button (Hidden on actual print) -->
-    <div class="text-center mt-6 no-print flex justify-center gap-3">
+    <div class="text-center mt-6 no-print flex justify-center gap-3 flex-wrap">
         <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
             Print this Document
         </button>
         <button onclick="savePDF()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
             &#x2B07; Save as PDF
         </button>
+        <?php if (!empty($po_data['supplier_email'])): ?>
+        <form action="send_po_handler.php" method="POST" onsubmit="return confirm('Send this PO to <?php echo htmlspecialchars($po_data['supplier_email']); ?>?');">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+            <input type="hidden" name="po_id" value="<?php echo (int)$po_id; ?>">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
+                &#9993; Send to Supplier
+            </button>
+        </form>
+        <?php else: ?>
+        <span class="inline-flex items-center py-2 px-4 rounded-lg bg-gray-200 text-gray-500 text-sm font-semibold" title="Add an email address to this supplier to enable this feature.">
+            &#9993; Send to Supplier (no email on file)
+        </span>
+        <?php endif; ?> 
     </div>
 </div>
 

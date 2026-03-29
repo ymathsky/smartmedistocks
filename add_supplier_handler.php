@@ -22,8 +22,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $name = trim($_POST['supplier_name']);
     $contact = trim($_POST['contact_info']);
+    $email = trim($_POST['supplier_email'] ?? '');
     $address = trim($_POST['address']); // NEW
     $lead_time = filter_input(INPUT_POST, 'lead_time', FILTER_VALIDATE_INT);
+
+    // Validate email if provided
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['error'] = "Invalid email address provided.";
+        header("Location: add_supplier.php");
+        exit();
+    }
 
     if (empty($name) || empty($address) || $lead_time === false || $lead_time < 1) {
         $_SESSION['error'] = "Invalid input. Please provide a valid name, address, and lead time.";
@@ -31,9 +39,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // UPDATED SQL: Insert into the new 'address' column
-    $stmt = $conn->prepare("INSERT INTO suppliers (name, contact_info, address, average_lead_time_days) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("sssi", $name, $contact, $address, $lead_time);
+    // UPDATED SQL: Insert into the new 'address' and 'email' columns
+    $stmt = $conn->prepare("INSERT INTO suppliers (name, contact_info, email, address, average_lead_time_days) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssi", $name, $contact, $email, $address, $lead_time);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = "Supplier '" . htmlspecialchars($name) . "' added successfully.";
