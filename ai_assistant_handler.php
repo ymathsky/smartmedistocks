@@ -1,10 +1,31 @@
 <?php
-// Filename: smart/ai_assistant_handler.php
+// Filename: ai_assistant_handler.php
 
 header('Content-Type: application/json');
-require_once 'db_connection.php'; // Ensure connection is established first
-require_once 'config.php';         // API keys — gitignored, never committed
+require_once 'db_connection.php';
+
+// config.php is gitignored — if missing on server, return a clear error
+if (!file_exists(__DIR__ . '/config.php')) {
+    echo json_encode(['error' => 'Server configuration missing. Please create config.php on the server.']);
+    exit;
+}
+require_once 'config.php';
+
 session_start();
+
+// Ensure the chat_log table exists (self-healing, safe to run every request)
+$conn->query("
+    CREATE TABLE IF NOT EXISTS `chat_log` (
+        `log_id`     INT(11)       NOT NULL AUTO_INCREMENT,
+        `user_id`    INT(11)       NOT NULL,
+        `sender`     ENUM('user','ai') NOT NULL,
+        `message`    TEXT          NOT NULL,
+        `created_at` TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`log_id`),
+        KEY `idx_chat_log_user_id`    (`user_id`),
+        KEY `idx_chat_log_created_at` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+");
 
 /**
  * Calls the Gemini API using PHP cURL with Google Search grounding.
