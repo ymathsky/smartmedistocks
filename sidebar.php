@@ -51,33 +51,7 @@ $ic = [
 <!-- Mobile overlay -->
 <div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-<style>
-#sidebar {
-    position: fixed; top: 0; left: 0;
-    height: 100vh; z-index: 50;
-    transform: translateX(-100%);
-    transition: transform .25s cubic-bezier(.4,0,.2,1);
-    display: flex; flex-direction: column;
-}
-#sidebar.sidebar-open { transform: translateX(0); }
-#sidebar-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.55); z-index: 40;
-    backdrop-filter: blur(2px);
-}
-#sidebar-overlay.sidebar-open { display: block; }
-#sidebar-close-btn { display: flex; }
-@media (min-width: 768px) {
-    #sidebar { transform: translateX(0) !important; }
-    #sidebar-overlay { display: none !important; }
-    #sidebar-close-btn { display: none !important; }
-}
-/* Thin scrollbar for the nav */
-#sidebar-nav::-webkit-scrollbar { width: 3px; }
-#sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-</style>
-
-<aside id="sidebar" class="w-64 flex-shrink-0" style="background:#0f172a;">
+<aside id="sidebar">
 
     <!-- ── Brand ── -->
     <div class="h-16 flex items-center justify-between px-4 flex-shrink-0" style="border-bottom:1px solid rgba(255,255,255,.07);">

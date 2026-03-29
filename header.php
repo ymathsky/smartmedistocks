@@ -99,13 +99,40 @@ $__avatar   = strtoupper(substr($_SESSION['username'] ?? 'U', 0, 2));
         /* ── Smooth page transitions ── */
         main { animation: fadeIn .18s ease; }
         @keyframes fadeIn { from { opacity: .85; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Sidebar + layout ── */
+        #sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 256px; height: 100vh; z-index: 50;
+            background: #0f172a;
+            display: flex; flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform .25s cubic-bezier(.4,0,.2,1);
+        }
+        #sidebar.sidebar-open { transform: translateX(0); }
+        #sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.55); z-index: 40;
+            backdrop-filter: blur(2px);
+        }
+        #sidebar-overlay.sidebar-open { display: block; }
+        #sidebar-close-btn { display: flex !important; }
+        #page-content { margin-left: 0; }
+        @media (min-width: 768px) {
+            #sidebar   { transform: none !important; }
+            #sidebar-overlay  { display: none !important; }
+            #sidebar-close-btn { display: none !important; }
+            #page-content { margin-left: 256px; }
+        }
+        #sidebar-nav::-webkit-scrollbar { width: 3px; }
+        #sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
 
 <?php include_once 'sidebar.php'; ?>
 
-<div class="md:ml-64 flex flex-col min-h-screen">
+<div id="page-content" class="flex flex-col min-h-screen">
 
         <!-- ═══ TOP BAR ═══ -->
         <header class="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 flex items-center px-4 flex-shrink-0" style="box-shadow:0 1px 3px rgba(15,23,42,.06);">
