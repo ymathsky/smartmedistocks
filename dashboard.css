@@ -1,0 +1,296 @@
+/* =============================================
+   SmartMediStocks — Dashboard Design System
+   Vanilla CSS — shared by all role dashboards
+   ============================================= */
+
+/* --- CSS Custom Properties ---------------------------------------- */
+:root {
+  --ds-primary:       #2563eb;
+  --ds-primary-light: #eff6ff;
+  --ds-danger:        #ef4444;
+  --ds-danger-light:  #fef2f2;
+  --ds-warning:       #f59e0b;
+  --ds-warning-light: #fffbeb;
+  --ds-success:       #10b981;
+  --ds-success-light: #f0fdf4;
+  --ds-surface:       #ffffff;
+  --ds-bg:            #f5f7fb;
+  --ds-border:        #e5e9f0;
+  --ds-text-primary:  #111827;
+  --ds-text-secondary:#6b7280;
+  --ds-text-muted:    #9ca3af;
+  --ds-radius-card:   1rem;
+  --ds-radius-badge:  99px;
+  --ds-shadow-sm:     0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+  --ds-shadow-md:     0 4px 16px rgba(16,24,40,.08), 0 2px 6px rgba(16,24,40,.04);
+  --ds-shadow-lg:     0 12px 32px rgba(16,24,40,.10), 0 4px 10px rgba(16,24,40,.05);
+  --ds-transition:    0.18s cubic-bezier(.4,0,.2,1);
+}
+
+/* --- Page Shell ---------------------------------------------------- */
+.ds-page {
+  background: var(--ds-bg);
+  min-height: 100vh;
+}
+
+/* Subtle dot-grid background texture on the page wrapper */
+.ds-page > div:first-child,
+.p-5.max-w-screen-2xl {
+  background: var(--ds-bg);
+}
+
+/* --- Page Entry Animation ----------------------------------------- */
+@keyframes ds-fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.p-5.max-w-screen-2xl {
+  animation: ds-fadeUp 0.32s ease both;
+}
+
+/* --- KPI Cards ---------------------------------------------------- */
+.dash-card {
+  position: relative;
+  background: var(--ds-surface);
+  border-radius: var(--ds-radius-card);
+  border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-shadow-sm);
+  transition: transform var(--ds-transition), box-shadow var(--ds-transition);
+  overflow: hidden;
+}
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ds-primary), #7c3aed);
+  opacity: 0;
+  transition: opacity var(--ds-transition);
+  border-radius: var(--ds-radius-card) var(--ds-radius-card) 0 0;
+}
+.dash-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ds-shadow-lg);
+}
+.dash-card:hover::before {
+  opacity: 1;
+}
+
+/* KPI number pulse on page load */
+@keyframes ds-countIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.dash-card p.text-2xl {
+  animation: ds-countIn 0.4s 0.15s ease both;
+}
+
+/* --- Section Title ------------------------------------------------ */
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ds-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* --- White Cards (charts, tables, panels) ------------------------- */
+.bg-white.rounded-2xl {
+  box-shadow: var(--ds-shadow-sm);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-card);
+  transition: box-shadow var(--ds-transition);
+}
+.bg-white.rounded-2xl:hover {
+  box-shadow: var(--ds-shadow-md);
+}
+
+/* --- Buttons ------------------------------------------------------ */
+a.inline-flex,
+button.inline-flex {
+  transition: transform var(--ds-transition), box-shadow var(--ds-transition), background var(--ds-transition);
+}
+a.inline-flex:hover,
+button.inline-flex:hover {
+  transform: translateY(-1px);
+}
+/* Primary button glow */
+a.bg-blue-600:hover,
+button.bg-blue-600:hover {
+  box-shadow: 0 4px 14px rgba(37,99,235,.35);
+}
+
+/* --- Badges ------------------------------------------------------- */
+/* Pulse animation for critical alert badges */
+@keyframes ds-pulse-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(239,68,68,.35); }
+  70%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0   rgba(239,68,68,0); }
+}
+.bg-red-100.text-red-600,
+span.text-red-600.bg-red-50,
+span.text-red-600.bg-red-100 {
+  animation: ds-pulse-ring 2.2s ease-out infinite;
+  border-radius: var(--ds-radius-badge);
+}
+
+/* Warning shimmer */
+@keyframes ds-shimmer {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+.bg-amber-100.text-amber-600,
+span.text-amber-600.bg-amber-50,
+span.text-amber-600.bg-amber-100 {
+  animation: ds-shimmer 2.8s ease-in-out infinite;
+}
+
+/* --- Alert Row Items ---------------------------------------------- */
+.bg-red-50.rounded-xl,
+.bg-amber-50.rounded-xl {
+  border: 1px solid transparent;
+  transition: border-color var(--ds-transition), background var(--ds-transition);
+}
+.bg-red-50.rounded-xl:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5;
+}
+.bg-amber-50.rounded-xl:hover {
+  background: #fde68a4d !important;
+  border-color: #fcd34d;
+}
+
+/* --- Table Rows --------------------------------------------------- */
+tbody tr {
+  transition: background var(--ds-transition);
+}
+tbody tr:hover {
+  position: relative;
+}
+/* Left accent on hovered rows */
+tbody tr.hover\:bg-gray-50:hover td:first-child {
+  box-shadow: inset 3px 0 0 var(--ds-primary);
+}
+
+/* --- Progress Bars (used in admin warehouse location panel) ------- */
+@keyframes ds-barGrow {
+  from { width: 0; }
+}
+.h-1\.5.bg-blue-400 {
+  animation: ds-barGrow 0.7s 0.2s ease both;
+}
+
+/* --- Charts ------------------------------------------------------- */
+canvas {
+  border-radius: 0.5rem;
+}
+
+/* --- Custom Scrollbar (Webkit) ------------------------------------ */
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 99px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* --- DataTables overrides ----------------------------------------- */
+.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid var(--ds-border);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color var(--ds-transition), box-shadow var(--ds-transition);
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--ds-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.dataTables_wrapper .dataTables_length select {
+  border: 1px solid var(--ds-border);
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8125rem;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  border-radius: 0.5rem !important;
+  font-size: 0.8125rem;
+  border: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--ds-primary) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--ds-primary-light) !important;
+  color: var(--ds-primary) !important;
+  border: none !important;
+}
+
+/* --- Icon backgrounds --------------------------------------------- */
+/* Smooth scale on KPI icon containers */
+.w-10.h-10.rounded-xl,
+.w-11.h-11.rounded-xl {
+  transition: transform var(--ds-transition);
+}
+.dash-card:hover .w-10.h-10.rounded-xl,
+.dash-card:hover .w-11.h-11.rounded-xl {
+  transform: scale(1.1) rotate(-4deg);
+}
+
+/* --- Page header action area --------------------------------------- */
+.flex.flex-wrap.gap-2 a,
+.flex.gap-2.flex-wrap a {
+  position: relative;
+  overflow: hidden;
+}
+/* Ripple effect on button click */
+.flex.flex-wrap.gap-2 a::after,
+.flex.gap-2.flex-wrap a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.25);
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity 0.1s;
+}
+.flex.flex-wrap.gap-2 a:active::after,
+.flex.gap-2.flex-wrap a:active::after {
+  opacity: 1;
+}
+
+/* --- Staggered card entrance --------------------------------------- */
+.grid > .dash-card:nth-child(1) { animation-delay: 0.04s; }
+.grid > .dash-card:nth-child(2) { animation-delay: 0.10s; }
+.grid > .dash-card:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes ds-cardFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.grid > .dash-card {
+  animation: ds-cardFadeUp 0.36s ease both;
+}
+
+/* --- Panel entrance (charts, tables) ------------------------------- */
+@keyframes ds-panelFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bg-white.rounded-2xl {
+  animation: ds-panelFade 0.38s ease both;
+}

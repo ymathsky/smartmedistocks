@@ -197,11 +197,7 @@ $usage_chart_data = [
 ];
 
 ?>
-<style>
-.dash-card { transition: transform 0.18s, box-shadow 0.18s; }
-.dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
-.section-title { font-size: 0.9375rem; font-weight: 700; color: #111827; }
-</style>
+<link rel="stylesheet" href="dashboard.css">
 
 <div class="p-5 max-w-screen-2xl mx-auto">
     <!-- Page Header -->
