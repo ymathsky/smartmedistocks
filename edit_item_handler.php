@@ -42,14 +42,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $shelf_life = ($shelf_life === false || $shelf_life < 0) ? null : $shelf_life;
     $supplier_id = ($supplier_id === false) ? null : $supplier_id;
+    $is_controlled = isset($_POST['is_controlled']) ? 1 : 0;
 
     // --- Database Interaction ---
-    $stmt = $conn->prepare("UPDATE items SET name = ?, item_code = ?, description = ?, category = ?, brand_name = ?, unit_of_measure = ?, unit_cost = ?, shelf_life_days = ?, supplier_id = ? WHERE item_id = ?");
+    $stmt = $conn->prepare("UPDATE items SET name = ?, item_code = ?, description = ?, category = ?, brand_name = ?, unit_of_measure = ?, unit_cost = ?, shelf_life_days = ?, supplier_id = ?, is_controlled = ? WHERE item_id = ?");
     if ($stmt === false) {
         die('Prepare failed: ' . htmlspecialchars($conn->error));
     }
 
-    $stmt->bind_param("ssssssdiii", $item_name, $item_code, $description, $category, $brand_name, $unit_of_measure, $unit_cost, $shelf_life, $supplier_id, $item_id);
+    $stmt->bind_param("ssssssdiiii", $item_name, $item_code, $description, $category, $brand_name, $unit_of_measure, $unit_cost, $shelf_life, $supplier_id, $is_controlled, $item_id);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = "Item '" . htmlspecialchars($item_name) . "' has been updated successfully.";

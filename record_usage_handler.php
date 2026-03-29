@@ -14,6 +14,15 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] != 'Admin' && $_SESSION['rol
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // --- CSRF Protection Check ---
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $_SESSION['error'] = "Security error: Invalid request token.";
+        unset($_SESSION['csrf_token']);
+        header("Location: index.php");
+        exit();
+    }
+    // --- End CSRF Check ---
+
     // Validate and sanitize inputs
     $item_id = filter_input(INPUT_POST, 'item_id', FILTER_VALIDATE_INT);
     $quantity_used = filter_input(INPUT_POST, 'quantity_used', FILTER_VALIDATE_INT);
@@ -41,6 +50,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $item_name = ($item_name_result->num_rows > 0) ? $item_name_result->fetch_assoc()['name'] : 'Unknown Item';
     $item_name_stmt->close();
 
+    // --- Check if this is a Controlled Substance ---
+    $ctrl_stmt = $conn->prepare("SELECT is_controlled FROM items WHERE item_id = ?");
+    $ctrl_stmt->bind_param("i", $item_id);
+    $ctrl_stmt->execute();
+    $ctrl_row = $ctrl_stmt->get_result()->fetch_assoc();
+    $ctrl_stmt->close();
+    $is_controlled = $ctrl_row ? (int)$ctrl_row['is_controlled'] : 0;
+
+    $authorizer_user_id = null;
+
+    if ($is_controlled) {
+        $auth_username = trim($_POST['auth_username'] ?? '');
+        $auth_password = $_POST['auth_password'] ?? '';
+        if (empty($auth_username) || empty($auth_password)) {
+            $_SESSION['error'] = "This is a controlled substance. A second authorizer's credentials are required.";
+            header("Location: record_usage.php");
+            exit();
+        }
+        // Authorizer must be a valid, different user from the current session
+        $current_user_id = (int)$_SESSION['user_id'];
+        $auth_stmt = $conn->prepare("SELECT user_id, password FROM users WHERE username = ? AND user_id != ?");
+        $auth_stmt->bind_param("si", $auth_username, $current_user_id);
+        $auth_stmt->execute();
+        $auth_row = $auth_stmt->get_result()->fetch_assoc();
+        $auth_stmt->close();
+        if (!$auth_row || !password_verify($auth_password, $auth_row['password'])) {
+            $_SESSION['error'] = "Controlled substance authorization failed. The authorizer credentials provided are invalid.";
+            header("Location: record_usage.php");
+            exit();
+        }
+        $authorizer_user_id = (int)$auth_row['user_id'];
+    }
 
     // --- Database Interaction within a Transaction ---
     $conn->begin_transaction();
@@ -90,8 +131,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // 2. Insert the new transaction record
-        $stmt1 = $conn->prepare("INSERT INTO transactions (item_id, quantity_used, transaction_date) VALUES (?, ?, ?)");
-        $stmt1->bind_param("iis", $item_id, $quantity_used, $transaction_date);
+        $stmt1 = $conn->prepare("INSERT INTO transactions (item_id, quantity_used, transaction_date, authorizer_user_id) VALUES (?, ?, ?, ?)");
+        $stmt1->bind_param("iisi", $item_id, $quantity_used, $transaction_date, $authorizer_user_id);
         $stmt1->execute();
         $stmt1->close();
 
@@ -100,7 +141,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_id = $_SESSION['user_id'];
         $username = $_SESSION['username'];
         $action_type = "Recorded Item Usage";
-        $details = "Recorded usage of $quantity_used unit(s) for item '$item_name' (ID: $item_id).";
+        $details = $is_controlled
+            ? "Recorded usage of $quantity_used unit(s) for CONTROLLED SUBSTANCE '$item_name' (ID: $item_id). Dual-authorized by user ID: $authorizer_user_id."
+            : "Recorded usage of $quantity_used unit(s) for item '$item_name' (ID: $item_id).";
         $log_stmt->bind_param("isss", $user_id, $username, $action_type, $details);
         $log_stmt->execute();
         $log_stmt->close();

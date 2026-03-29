@@ -41,14 +41,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $shelf_life = ($shelf_life === false || $shelf_life < 0) ? null : $shelf_life;
     $supplier_id = ($supplier_id === false) ? null : $supplier_id;
+    $is_controlled = isset($_POST['is_controlled']) ? 1 : 0;
 
     // --- Database Interaction ---
-    $stmt = $conn->prepare("INSERT INTO items (name, item_code, description, category, brand_name, unit_of_measure, unit_cost, shelf_life_days, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO items (name, item_code, description, category, brand_name, unit_of_measure, unit_cost, shelf_life_days, supplier_id, is_controlled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     if ($stmt === false) {
         die('Prepare failed: ' . htmlspecialchars($conn->error));
     }
 
-    $stmt->bind_param("ssssssdii", $item_name, $item_code, $description, $category, $brand_name, $unit_of_measure, $unit_cost, $shelf_life, $supplier_id);
+    $stmt->bind_param("ssssssdiii", $item_name, $item_code, $description, $category, $brand_name, $unit_of_measure, $unit_cost, $shelf_life, $supplier_id, $is_controlled);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = "Item '" . htmlspecialchars($item_name) . "' has been added successfully.";

@@ -13,11 +13,11 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] != 'Admin' && $_SESSION['rol
 
 // Fetch all items with current stock to populate the dropdown
 $items_result = $conn->query("
-    SELECT i.item_id, i.name, i.item_code,
+    SELECT i.item_id, i.name, i.item_code, i.is_controlled,
            COALESCE(SUM(b.quantity), 0) AS current_stock
     FROM items i
     LEFT JOIN item_batches b ON i.item_id = b.item_id
-    GROUP BY i.item_id, i.name, i.item_code
+    GROUP BY i.item_id, i.name, i.item_code, i.is_controlled
     ORDER BY i.name ASC
 ");
 ?>
@@ -78,6 +78,8 @@ $items_result = $conn->query("
     </div>
 
     <form action="record_usage_handler.php" method="POST" id="usage_form">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
         <!-- Two-column layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -117,6 +119,7 @@ $items_result = $conn->query("
                                . ' data-stock="' . $stock . '"'
                                . ' data-name="' . htmlspecialchars($item['name'], ENT_QUOTES) . '"'
                                . ' data-code="' . htmlspecialchars($item['item_code'], ENT_QUOTES) . '"'
+                               . ' data-controlled="' . (int)$item['is_controlled'] . '"'
                                . '>'
                                . '<div>'
                                . '<div class="text-sm font-medium text-gray-800">' . htmlspecialchars($item['name']) . '</div>'
@@ -211,6 +214,32 @@ $items_result = $conn->query("
                     </button>
                 </div>
 
+                <!-- Controlled Substance: Authorizer Section -->
+                <div id="auth_section" class="hidden bg-white rounded-xl shadow-sm border border-red-300 p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h2 class="font-semibold text-gray-700">Step 4 — Second Authorizer Required</h2>
+                    </div>
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-xs font-bold text-red-700">&#9888; CONTROLLED SUBSTANCE</p>
+                        <p class="text-xs text-red-600 mt-1">A second staff member must authenticate to approve this dispensing. They must use a different account than yours.</p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="auth_username" class="block text-sm font-medium text-gray-700 mb-1.5">Authorizer Username <span class="text-red-500">*</span></label>
+                        <input type="text" id="auth_username" name="auth_username"
+                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            autocomplete="off" placeholder="Enter authorizer's username">
+                    </div>
+                    <div>
+                        <label for="auth_password" class="block text-sm font-medium text-gray-700 mb-1.5">Authorizer Password <span class="text-red-500">*</span></label>
+                        <input type="password" id="auth_password" name="auth_password"
+                            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            autocomplete="off" placeholder="Enter authorizer's password">
+                    </div>
+                </div>
+
             </div><!-- end right col -->
         </div><!-- end grid -->
 
@@ -243,6 +272,17 @@ $items_result = $conn->query("
     var line23       = document.getElementById('line23');
 
     var currentStock = 0;
+    var authSection  = document.getElementById('auth_section');
+    var authUsername = document.getElementById('auth_username');
+    var authPassword = document.getElementById('auth_password');
+    var isControlled = false;
+
+    function checkReady() {
+        if (!hiddenInput.value) return;
+        submitBtn.disabled = isControlled
+            ? !(authUsername.value.trim() && authPassword.value.trim())
+            : false;
+    }
 
     function setStep(n) {
         // step 1 dot stays active always
@@ -306,18 +346,32 @@ $items_result = $conn->query("
         rows.forEach(function(r) { r.classList.remove('selected'); });
         row.classList.add('selected');
 
-        var id    = row.getAttribute('data-id');
-        var name  = row.getAttribute('data-name');
-        var code  = row.getAttribute('data-code');
-        var stock = row.getAttribute('data-stock');
+        var id         = row.getAttribute('data-id');
+        var name       = row.getAttribute('data-name');
+        var code       = row.getAttribute('data-code');
+        var stock      = row.getAttribute('data-stock');
+        var controlled = row.getAttribute('data-controlled');
 
-        hiddenInput.value  = id;
+        isControlled = (controlled === '1');
+
+        hiddenInput.value    = id;
         infoName.textContent = name;
         infoCode.textContent = code;
 
         noSelection.classList.add('hidden');
         itemInfo.classList.remove('hidden');
-        submitBtn.disabled = false;
+
+        if (isControlled) {
+            authSection.classList.remove('hidden');
+            authUsername.value = '';
+            authPassword.value = '';
+            submitBtn.disabled = true; // require auth credentials first
+        } else {
+            authSection.classList.add('hidden');
+            authUsername.value = '';
+            authPassword.value = '';
+            submitBtn.disabled = false;
+        }
 
         showStock(stock);
         setStep(2);
@@ -375,7 +429,15 @@ $items_result = $conn->query("
         setStep(1);
         overAlert.classList.add('hidden');
         zeroAlert.classList.add('hidden');
+        isControlled = false;
+        authSection.classList.add('hidden');
+        authUsername.value = '';
+        authPassword.value = '';
     });
+
+    // Enable submit when controlled substance auth fields are filled
+    authUsername.addEventListener('input', checkReady);
+    authPassword.addEventListener('input', checkReady);
 })();
 </script>
 

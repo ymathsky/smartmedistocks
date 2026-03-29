@@ -95,6 +95,17 @@ $suppliers_result = $conn->query($sql_suppliers);
                     </div>
                 </div>
             </div>
+            <!-- Controlled Substance Flag -->
+            <div class="mt-4 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="is_controlled" value="1" class="w-5 h-5 text-red-600 rounded">
+                    <div>
+                        <span class="text-sm font-bold text-red-700">⚠ Controlled Substance</span>
+                        <p class="text-xs text-red-500 mt-0.5">Dispensing this item will require a second authorizer (dual-authorization).</p>
+                    </div>
+                </label>
+            </div>
+
             <!-- Form Actions -->
             <div class="flex items-center justify-end mt-6">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md">
