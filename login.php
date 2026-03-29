@@ -3,12 +3,7 @@ session_start();
 
 // If the user is already logged in, redirect them to the dashboard
 if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-    $role = $_SESSION['role'] ?? '';
-    if ($role === 'Admin') header("location: admin_dashboard.php");
-    elseif ($role === 'Pharmacist') header("location: pharmacist_dashboard.php");
-    elseif ($role === 'Warehouse') header("location: warehouse_dashboard.php");
-    elseif ($role === 'Procurement') header("location: procurement_dashboard.php");
-    else header("location: admin_dashboard.php");
+    header("location: index.php");
     exit;
 }
 

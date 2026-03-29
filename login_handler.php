@@ -57,24 +57,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION["role"] = $role;
 
                             // Redirect user based on role
-                            switch ($role) {
-                                case 'Admin':
-                                    header("location: admin_dashboard.php");
-                                    break;
-                                case 'Procurement':
-                                    header("location: procurement_dashboard.php");
-                                    break;
-                                case 'Warehouse':
-                                    header("location: warehouse_dashboard.php");
-                                    break;
-                                case 'Pharmacist':
-                                    header("location: pharmacist_dashboard.php");
-                                    break;
-                                default:
-                                    header("location: admin_dashboard.php"); // Fallback redirect
-                                    break;
-                            }
-                            exit(); // It's important to exit after a redirect
+                            // All roles go through the index.php router which handles layout
+                            header("location: index.php");
+                            exit();
                         } else {
                             // Display an error message if password is not valid
                             $_SESSION["login_err"] = "Invalid username or password.";
