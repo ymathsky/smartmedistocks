@@ -139,152 +139,180 @@ $top_items_chart_data = ['labels' => $top_items_labels, 'values' => $top_items_v
 ?>
 
 <!-- Main Content -->
-<div class="flex-1 p-6 bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full">
-        <h1 class="text-3xl font-bold mb-2 text-gray-800">Pharmacist Dashboard</h1>
-        <p class="mb-6 text-gray-600">Focus on daily operations: inventory availability, usage tracking, and expiry management.</p>
+<style>
+.dash-card { transition: transform 0.18s, box-shadow 0.18s; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.section-title { font-size: 0.9375rem; font-weight: 700; color: #111827; }
+</style>
+<div class="p-5 max-w-screen-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Pharmacist Dashboard</h1>
+            <p class="text-xs text-gray-400 mt-0.5"><?php echo date("l, F j, Y"); ?></p>
+        </div>
+        <a href="record_usage.php" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Record Usage
+        </a>
+    </div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-blue-500">
-                <h2 class="text-gray-600 text-sm font-bold">Total Stocked Units</h2>
-                <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo number_format($total_stock_count); ?></p>
+    <!-- KPI Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-7">
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">Current</span>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-red-500">
-                <h2 class="text-gray-600 text-sm font-bold">Items Below Reorder Point</h2>
-                <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo count($rop_alerts); ?></p>
+            <p class="text-2xl font-bold text-gray-900"><?php echo number_format($total_stock_count); ?></p>
+            <p class="text-xs text-gray-400 mt-1">Total Stocked Units</p>
+        </div>
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <?php echo count($rop_alerts) > 0 ? '<span class="text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full">Reorder</span>' : '<span class="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">&#10003; OK</span>'; ?>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-yellow-500">
-                <h2 class="text-gray-600 text-sm font-bold">Items Expiring in <60 Days</h2>
-                <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo count($expiry_alerts); ?></p>
+            <p class="text-2xl font-bold text-gray-900"><?php echo count($rop_alerts); ?></p>
+            <p class="text-xs text-gray-400 mt-1">Items Below Reorder Point</p>
+        </div>
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <?php echo count($expiry_alerts) > 0 ? '<span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full">Monitor</span>' : '<span class="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">&#10003; OK</span>'; ?>
             </div>
+            <p class="text-2xl font-bold text-gray-900"><?php echo count($expiry_alerts); ?></p>
+            <p class="text-xs text-gray-400 mt-1">Items Expiring &lt;60 Days</p>
+        </div>
+    </div>
+
+    <!-- Chart + Alerts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-7">
+        <!-- Top 5 Used Items chart -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <p class="section-title mb-4">Top 5 Most Used Items &mdash; Last 30 Days</p>
+            <canvas id="topItemsChart" height="200"></canvas>
         </div>
 
-        <!-- Chart: Top 5 Most Used Items -->
-        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Top 5 Most Used Items (Last 30 Days)</h2>
-            <canvas id="topItemsChart"></canvas>
-        </div>
-
-        <!-- Alerts and Quick Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- Critical Stock Alerts Section -->
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Critical Stock Alerts (Below ROP)</h2>
-                <?php if (!empty($rop_alerts)): ?>
-                    <div class="space-y-4">
-                        <?php foreach($rop_alerts as $alert): ?>
-                            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow">
-                                <div class="font-bold text-lg"><?php echo $alert['name']; ?> (<?php echo $alert['item_code']; ?>)</div>
-                                <p class="text-sm">Current Stock: **<?php echo $alert['current_stock']; ?>** | ROP: **<?php echo $alert['reorder_point']; ?>**</p>
-                                <div class="mt-2 text-sm">
-                                    <a href="item_management.php" class="text-red-600 hover:underline font-semibold">Manage Item Details &rarr;</a>
-                                </div>
+        <!-- ROP Alerts -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <p class="section-title">Critical Stock Alerts</p>
+                <span class="text-xs font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Below ROP</span>
+            </div>
+            <?php if (!empty($rop_alerts)): ?>
+                <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    <?php foreach($rop_alerts as $a): ?>
+                        <div class="flex items-center justify-between bg-red-50 rounded-xl px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-gray-800 truncate"><?php echo $a['name']; ?></p>
+                                <p class="text-xs text-gray-400"><?php echo $a['item_code']; ?></p>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow" role="alert">
-                        <p class="font-bold">All items are currently above their reorder points.</p>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Near-Expiry Alerts Section -->
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Near-Expiry Alerts (Next 60 Days)</h2>
-                <?php if (!empty($expiry_alerts)): ?>
-                    <div class="space-y-4">
-                        <?php foreach($expiry_alerts as $alert): ?>
-                            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow">
-                                <div class="font-bold text-lg"><?php echo htmlspecialchars($alert['name']); ?></div>
-                                <p class="text-sm">
-                                    **<?php echo number_format($alert['total_expiring_qty']); ?> units** expiring earliest on **<?php echo date("M j, Y", strtotime($alert['earliest_expiry'])); ?>**.
-                                </p>
-                                <div class="mt-2 text-sm">
-                                    <a href="item_management.php" class="text-yellow-600 hover:underline font-semibold">Prioritize Usage / Manage &rarr;</a>
-                                </div>
+                            <div class="text-right flex-shrink-0 ml-3">
+                                <p class="text-xs font-bold text-red-600"><?php echo $a['current_stock']; ?> units</p>
+                                <p class="text-xs text-gray-400">ROP: <?php echo $a['reorder_point']; ?></p>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg shadow" role="alert">
-                        <p class="font-bold">No items are set to expire in the next 60 days.</p>
-                    </div>
-                <?php endif; ?>
-            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <a href="order_suggestion.php" class="inline-block mt-3 text-xs text-blue-600 hover:underline font-medium">View order suggestions &rarr;</a>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center py-10">
+                    <svg class="w-10 h-10 text-green-200 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-xs text-gray-400 text-center">All items above reorder point</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 
+    <!-- Expiry Alerts + Recent Usage -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Near-Expiry -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <p class="section-title">Near-Expiry Alerts</p>
+                <span class="text-xs font-semibold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">Next 60 Days</span>
+            </div>
+            <?php if (!empty($expiry_alerts)): ?>
+                <div class="space-y-2">
+                    <?php foreach($expiry_alerts as $a): ?>
+                        <div class="flex items-start justify-between gap-2 pb-2 border-b border-gray-50 last:border-0">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-gray-800 truncate"><?php echo htmlspecialchars($a['name']); ?></p>
+                                <p class="text-xs text-gray-400"><?php echo number_format($a['total_expiring_qty']); ?> units expiring</p>
+                            </div>
+                            <p class="text-xs font-bold text-amber-600 flex-shrink-0"><?php echo date("M j, Y", strtotime($a['earliest_expiry'])); ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center py-10">
+                    <svg class="w-10 h-10 text-green-200 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-xs text-gray-400">No expiry alerts in next 60 days</p>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <!-- Recent Usage Section -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Recent Item Usage</h2>
+        <!-- Recent Usage Table -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-5">
+                <p class="section-title">Recent Item Usage</p>
+                <a href="transaction_history.php" class="text-xs text-blue-600 hover:underline font-medium">View all &rarr;</a>
+            </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
-                        <th class="py-2 px-4 text-right text-xs font-medium text-gray-500 uppercase">Quantity Used</th>
-                    </tr>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                            <th class="pb-3 text-left font-semibold tracking-wide">Date</th>
+                            <th class="pb-3 text-left font-semibold tracking-wide">Item</th>
+                            <th class="pb-3 text-right font-semibold tracking-wide">Qty</th>
+                        </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-50">
                     <?php if ($recent_usage_result && $recent_usage_result->num_rows > 0): ?>
                         <?php while($row = $recent_usage_result->fetch_assoc()): ?>
-                            <tr>
-                                <td class="py-3 px-4 text-sm text-gray-600"><?php echo date("M j, Y", strtotime($row['transaction_date'])); ?></td>
-                                <td class="py-3 px-4 text-sm text-gray-800 font-medium"><?php echo htmlspecialchars($row['name']); ?></td>
-                                <td class="py-3 px-4 text-sm text-gray-600 text-right font-mono"><?php echo htmlspecialchars($row['quantity_used']); ?></td>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-2.5 text-xs text-gray-400"><?php echo date("M j, Y", strtotime($row['transaction_date'])); ?></td>
+                                <td class="py-2.5 text-sm font-medium text-gray-800"><?php echo htmlspecialchars($row['name']); ?></td>
+                                <td class="py-2.5 text-right text-sm font-bold text-gray-700"><?php echo $row['quantity_used']; ?></td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-gray-500">No recent usage transactions found.</td>
-                        </tr>
+                        <tr><td colspan="3" class="py-6 text-center text-xs text-gray-400">No usage transactions found.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <div class="flex justify-end mt-4">
-                <a href="record_usage.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700">Record New Usage</a>
-            </div>
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const topItemsData = <?php echo json_encode($top_items_chart_data); ?>;
-
-        if (topItemsData.labels.length > 0) {
-            const ctxTopItems = document.getElementById('topItemsChart').getContext('2d');
-            new Chart(ctxTopItems, {
-                type: 'bar',
-                data: {
-                    labels: topItemsData.labels,
-                    datasets: [{
-                        label: 'Total Units Used',
-                        data: topItemsData.values,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Units Used' }
-                        }
-                    }
+document.addEventListener('DOMContentLoaded', function() {
+    const topItemsData = <?php echo json_encode($top_items_chart_data); ?>;
+    if (topItemsData.labels.length > 0) {
+        new Chart(document.getElementById('topItemsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: topItemsData.labels,
+                datasets: [{ data: topItemsData.values, backgroundColor: '#3b82f6', borderRadius: 6, barThickness: 16 }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+                    y: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+});
 </script>
+

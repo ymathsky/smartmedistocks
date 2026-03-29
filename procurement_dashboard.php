@@ -116,97 +116,141 @@ $po_status_chart_data = ['labels' => $po_status_labels, 'values' => $po_status_v
 ?>
 
 <!-- Main Content -->
-<div class="flex-1 p-6 bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full">
-        <h1 class="text-3xl font-bold mb-2 text-gray-800">Procurement Dashboard</h1>
-        <p class="mb-8 text-gray-600">Analytics on inventory status, supplier performance, and items requiring action.</p>
+<style>
+.dash-card { transition: transform 0.18s, box-shadow 0.18s; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.section-title { font-size: 0.9375rem; font-weight: 700; color: #111827; }
+</style>
+<div class="p-5 max-w-screen-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Procurement Dashboard</h1>
+            <p class="text-xs text-gray-400 mt-0.5"><?php echo date("l, F j, Y"); ?></p>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+            <a href="create_purchase_order.php" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                New PO
+            </a>
+            <a href="po_management.php" class="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                View All POs
+            </a>
+            <a href="order_suggestion.php" class="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                Order Suggestions
+            </a>
+        </div>
+    </div>
 
-        <!-- Chart: PO Status Breakdown -->
-        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Purchase Order Status Overview</h2>
-            <div class="max-w-md mx-auto">
-                <canvas id="poStatusChart"></canvas>
+    <!-- PO Status chart + Reorder Alerts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-7">
+        <!-- PO Status Doughnut -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <p class="section-title mb-4">Purchase Order Status</p>
+            <div class="flex justify-center">
+                <canvas id="poStatusChart" style="max-width:260px;max-height:260px;"></canvas>
             </div>
         </div>
 
-        <!-- Section 1: Items Requiring Reorder -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Items Requiring Reorder (Below ROP)</h2>
+        <!-- Reorder Alerts -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <p class="section-title">Items Below Reorder Point</p>
+                <span class="text-xs font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full"><?php echo count($reorder_alerts); ?> items</span>
+            </div>
             <?php if (!empty($reorder_alerts)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php foreach($reorder_alerts as $alert): ?>
-                        <div class="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-lg shadow">
-                            <div class="font-bold text-lg"><?php echo $alert['item_name']; ?> (<?php echo $alert['item_code']; ?>)</div>
-                            <p>Current Stock is **<?php echo $alert['current_stock']; ?>** vs ROP of **<?php echo $alert['reorder_point']; ?>**.</p>
-                            <div class="mt-2 text-sm">
-                                <a href="order_suggestion.php" class="text-red-600 hover:underline font-semibold">View Order Suggestion &rarr;</a>
+                <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    <?php foreach($reorder_alerts as $a): ?>
+                        <div class="flex items-center justify-between bg-red-50 rounded-xl px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-gray-800 truncate"><?php echo htmlspecialchars($a['item_name']); ?></p>
+                                <p class="text-xs text-gray-400"><?php echo htmlspecialchars($a['item_code']); ?></p>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-3">
+                                <p class="text-xs font-bold text-red-600"><?php echo $a['current_stock']; ?> units</p>
+                                <p class="text-xs text-gray-400">ROP: <?php echo $a['reorder_point']; ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <a href="order_suggestion.php" class="inline-block mt-3 text-xs text-blue-600 hover:underline font-medium">View order suggestions &rarr;</a>
             <?php else: ?>
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow"><p>No items are currently below their reorder point.</p></div>
+                <div class="flex flex-col items-center justify-center py-10">
+                    <svg class="w-10 h-10 text-green-200 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-xs text-gray-400">No items below reorder point</p>
+                </div>
             <?php endif; ?>
         </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Section 2: Supplier Lead Time Performance -->
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Supplier Performance</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead class="bg-gray-800 text-white">
-                        <tr>
-                            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Supplier</th>
-                            <th class="text-center py-3 px-4 uppercase font-semibold text-sm">Avg. Delivery Variance</th>
-                        </tr>
-                        </thead>
-                        <tbody class="text-gray-700">
-                        <?php if ($supplier_performance_result && $supplier_performance_result->num_rows > 0): ?>
-                            <?php while($row = $supplier_performance_result->fetch_assoc()):
-                                $variance = round($row['avg_delivery_variance']);
-                                $color_class = $variance > 2 ? 'text-red-600' : ($variance < -2 ? 'text-green-600' : '');
-                                $text = $variance > 0 ? "$variance days late" : abs($variance)." days early";
-                                if ($variance == 0) $text = "On time";
-                                ?>
-                                <tr>
-                                    <td class="text-left py-3 px-4"><?php echo htmlspecialchars($row['name']); ?></td>
-                                    <td class="text-center py-3 px-4 font-bold <?php echo $color_class; ?>"><?php echo $text; ?></td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="2" class="text-center py-4">No supplier delivery data available.</td></tr>
-                        <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+    <!-- Supplier Performance + Slow-Moving Items -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Supplier Performance -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center gap-2 mb-5">
+                <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
+                <p class="section-title">Supplier Performance</p>
             </div>
-
-            <!-- Section 3: Slow-Moving Items -->
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Slow-Moving Items</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead class="bg-gray-800 text-white">
-                        <tr>
-                            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Item</th>
-                            <th class="text-center py-3 px-4 uppercase font-semibold text-sm">Units Used (90 Days)</th>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                            <th class="pb-3 text-left font-semibold tracking-wide">Supplier</th>
+                            <th class="pb-3 text-center font-semibold tracking-wide">Delivery Variance</th>
                         </tr>
-                        </thead>
-                        <tbody class="text-gray-700">
-                        <?php if ($slow_moving_result && $slow_moving_result->num_rows > 0): ?>
-                            <?php while($row = $slow_moving_result->fetch_assoc()): ?>
-                                <tr>
-                                    <td class="text-left py-3 px-4"><?php echo htmlspecialchars($row['name']); ?> <span class="font-mono text-xs text-gray-500"><?php echo htmlspecialchars($row['item_code']); ?></span></td>
-                                    <td class="text-center py-3 px-4 font-bold"><?php echo (int)$row['usage_90_days']; ?></td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="2" class="text-center py-4">No slow-moving items found.</td></tr>
-                        <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                    <?php if ($supplier_performance_result && $supplier_performance_result->num_rows > 0): ?>
+                        <?php while($row = $supplier_performance_result->fetch_assoc()):
+                            $variance = round($row['avg_delivery_variance']);
+                            $badge_class = $variance > 2 ? 'bg-red-100 text-red-600' : ($variance < -2 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600');
+                            $text = $variance > 0 ? "+$variance days late" : ($variance < 0 ? abs($variance)." days early" : "On time");
+                            ?>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-3 font-medium text-gray-800"><?php echo htmlspecialchars($row['name']); ?></td>
+                                <td class="py-3 text-center">
+                                    <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full <?php echo $badge_class; ?>"><?php echo $text; ?></span>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="2" class="py-6 text-center text-xs text-gray-400">No delivery data available.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slow-Moving Items -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center gap-2 mb-5">
+                <div class="w-1 h-5 bg-amber-500 rounded-full"></div>
+                <p class="section-title">Slow-Moving Items</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                            <th class="pb-3 text-left font-semibold tracking-wide">Item</th>
+                            <th class="pb-3 text-center font-semibold tracking-wide">Used (90 Days)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                    <?php if ($slow_moving_result && $slow_moving_result->num_rows > 0): ?>
+                        <?php while($row = $slow_moving_result->fetch_assoc()): ?>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-3">
+                                    <p class="font-medium text-gray-800"><?php echo htmlspecialchars($row['name']); ?></p>
+                                    <p class="text-xs text-gray-400 font-mono"><?php echo htmlspecialchars($row['item_code']); ?></p>
+                                </td>
+                                <td class="py-3 text-center font-bold text-amber-600"><?php echo (int)$row['usage_90_days']; ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="2" class="py-6 text-center text-xs text-gray-400">No slow-moving items found.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -214,36 +258,24 @@ $po_status_chart_data = ['labels' => $po_status_labels, 'values' => $po_status_v
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const poStatusData = <?php echo json_encode($po_status_chart_data); ?>;
-
-        if (poStatusData.labels.length > 0) {
-            const ctxPOStatus = document.getElementById('poStatusChart').getContext('2d');
-            new Chart(ctxPOStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: poStatusData.labels,
-                    datasets: [{
-                        label: 'PO Status',
-                        data: poStatusData.values,
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.8)', // Placed
-                            'rgba(255, 206, 86, 0.8)', // Shipped
-                            'rgba(75, 192, 192, 0.8)', // Received
-                            'rgba(255, 99, 132, 0.8)', // Cancelled
-                            'rgba(153, 102, 255, 0.8)',// Draft
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
+document.addEventListener('DOMContentLoaded', function() {
+    const poStatusData = <?php echo json_encode($po_status_chart_data); ?>;
+    if (poStatusData.labels.length > 0) {
+        const palette = ['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6'];
+        new Chart(document.getElementById('poStatusChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: poStatusData.labels,
+                datasets: [{ data: poStatusData.values, backgroundColor: palette, borderWidth: 3, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true, cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+});
 </script>
+

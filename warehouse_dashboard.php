@@ -71,84 +71,123 @@ if ($location_stock_result) {
 $location_chart_data = ['labels' => $location_labels, 'values' => $location_values];
 
 ?>
-<div class="p-6">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Warehouse Dashboard</h1>
-
-        <!-- Chart: Stock by Location -->
-        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Stock Quantity by Location</h2>
-            <canvas id="locationStockChart"></canvas>
-        </div>
-
-        <!-- Expiry Alerts Section -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Expiry Alerts</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Critical Alerts -->
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
-                    <h3 class="font-bold text-lg">Expiring in less than 30 days (CRITICAL)</h3>
-                    <?php if ($critical_result->num_rows > 0): ?>
-                        <ul class="list-disc list-inside mt-2 text-sm">
-                            <?php $critical_result->data_seek(0); while($row = $critical_result->fetch_assoc()): ?>
-                                <li><strong><?php echo $row['quantity']; ?>x</strong> <?php echo $row['name']; ?> (Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?>) - Loc: <span class="font-mono"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span></li>
-                            <?php endwhile; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="mt-2 text-sm">No items are critically close to expiry.</p>
-                    <?php endif; ?>
-                </div>
-                <!-- Warning Alerts -->
-                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg">
-                    <h3 class="font-bold text-lg">Expiring in 30-60 days (WARNING)</h3>
-                    <?php if ($warning_result->num_rows > 0): ?>
-                        <ul class="list-disc list-inside mt-2 text-sm">
-                            <?php $warning_result->data_seek(0); while($row = $warning_result->fetch_assoc()): ?>
-                                <li><strong><?php echo $row['quantity']; ?>x</strong> <?php echo $row['name']; ?> (Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?>) - Loc: <span class="font-mono"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span></li>
-                            <?php endwhile; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="mt-2 text-sm">No items are expiring in the next 30-60 days.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detailed Inventory View -->
+<style>
+.dash-card { transition: transform 0.18s, box-shadow 0.18s; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.section-title { font-size: 0.9375rem; font-weight: 700; color: #111827; }
+</style>
+<div class="p-5 max-w-screen-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Detailed Stock Batches</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white border" id="batchesTable">
-                    <thead class="bg-gray-800 text-white">
-                    <tr>
-                        <th class="py-2 px-4 text-left">Item Name</th>
-                        <th class="py-2 px-4 text-left">Item Code</th>
-                        <th class="py-2 px-4 text-left">Location</th>
-                        <th class="py-2 px-4 text-right">Quantity</th>
-                        <th class="py-2 px-4 text-left">Expiry Date</th>
-                        <th class="py-2 px-4 text-left">Received Date</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php if ($all_batches_result->num_rows > 0): ?>
-                        <?php while($row = $all_batches_result->fetch_assoc()): ?>
-                            <tr class="border-b hover:bg-gray-100">
-                                <td class="py-2 px-4"><?php echo htmlspecialchars($row['name']); ?></td>
-                                <td class="py-2 px-4 font-mono"><?php echo htmlspecialchars($row['item_code']); ?></td>
-                                <td class="py-2 px-4 font-semibold text-sm"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></td>
-                                <td class="py-2 px-4 text-right"><?php echo $row['quantity']; ?></td>
-                                <td class="py-2 px-4 <?php echo (strtotime($row['expiry_date']) < strtotime('+30 days')) ? 'text-red-600 font-bold' : ''; ?>">
-                                    <?php echo $row['expiry_date'] ? date("M j, Y", strtotime($row['expiry_date'])) : 'N/A'; ?>
-                                </td>
-                                <td class="py-2 px-4"><?php echo date("M j, Y", strtotime($row['received_date'])); ?></td>
-                            </tr>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Warehouse Dashboard</h1>
+            <p class="text-xs text-gray-400 mt-0.5"><?php echo date("l, F j, Y"); ?></p>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+            <a href="receive_stock.php" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Receive Stock
+            </a>
+            <a href="move_stock.php" class="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                Move Stock
+            </a>
+        </div>
+    </div>
+
+    <!-- Chart + Expiry Alerts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-7">
+        <!-- Stock by Location -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <p class="section-title mb-4">Stock Quantity by Location</p>
+            <canvas id="locationStockChart" height="195"></canvas>
+        </div>
+
+        <!-- Expiry Alerts -->
+        <div class="grid grid-rows-2 gap-4">
+            <!-- Critical -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="section-title">Expiring &lt;30 Days</p>
+                    <span class="text-xs font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Critical</span>
+                </div>
+                <?php if ($critical_result->num_rows > 0): ?>
+                    <div class="space-y-1.5 max-h-28 overflow-y-auto">
+                        <?php $critical_result->data_seek(0); while($row = $critical_result->fetch_assoc()): ?>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-gray-800 truncate mr-2"><?php echo htmlspecialchars($row['name']); ?> <span class="text-gray-400 font-mono"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span></span>
+                                <div class="flex-shrink-0 text-right">
+                                    <span class="font-bold text-red-600"><?php echo date("M j", strtotime($row['expiry_date'])); ?></span>
+                                    <span class="text-gray-400 ml-1"><?php echo $row['quantity']; ?>u</span>
+                                </div>
+                            </div>
                         <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr><td colspan="6" class="text-center py-4">No stock batches found.</td></tr>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
+                    </div>
+                <?php else: ?>
+                    <p class="text-xs text-gray-400">No critical expiry batches.</p>
+                <?php endif; ?>
             </div>
+            <!-- Warning -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="section-title">Expiring 30&ndash;60 Days</p>
+                    <span class="text-xs font-semibold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">Warning</span>
+                </div>
+                <?php if ($warning_result->num_rows > 0): ?>
+                    <div class="space-y-1.5 max-h-28 overflow-y-auto">
+                        <?php $warning_result->data_seek(0); while($row = $warning_result->fetch_assoc()): ?>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-gray-800 truncate mr-2"><?php echo htmlspecialchars($row['name']); ?> <span class="text-gray-400 font-mono"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span></span>
+                                <div class="flex-shrink-0 text-right">
+                                    <span class="font-bold text-amber-600"><?php echo date("M j", strtotime($row['expiry_date'])); ?></span>
+                                    <span class="text-gray-400 ml-1"><?php echo $row['quantity']; ?>u</span>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="text-xs text-gray-400">No warning expiry batches.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Stock Batches (DataTable) -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div class="flex items-center gap-2 mb-5">
+            <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
+            <p class="section-title">Detailed Stock Batches</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm" id="batchesTable">
+                <thead>
+                    <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                        <th class="pb-3 text-left font-semibold tracking-wide">Item Name</th>
+                        <th class="pb-3 text-left font-semibold tracking-wide">Code</th>
+                        <th class="pb-3 text-left font-semibold tracking-wide">Location</th>
+                        <th class="pb-3 text-right font-semibold tracking-wide">Qty</th>
+                        <th class="pb-3 text-left font-semibold tracking-wide">Expiry</th>
+                        <th class="pb-3 text-left font-semibold tracking-wide">Received</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                <?php if ($all_batches_result->num_rows > 0): ?>
+                    <?php while($row = $all_batches_result->fetch_assoc()): ?>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-2.5 font-medium text-gray-800"><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td class="py-2.5 font-mono text-xs text-gray-500"><?php echo htmlspecialchars($row['item_code']); ?></td>
+                            <td class="py-2.5 text-xs font-semibold text-gray-700"><?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></td>
+                            <td class="py-2.5 text-right font-bold text-gray-900"><?php echo $row['quantity']; ?></td>
+                            <td class="py-2.5 text-xs <?php echo ($row['expiry_date'] && strtotime($row['expiry_date']) < strtotime('+30 days')) ? 'text-red-600 font-bold' : 'text-gray-500'; ?>">
+                                <?php echo $row['expiry_date'] ? date("M j, Y", strtotime($row['expiry_date'])) : 'N/A'; ?>
+                            </td>
+                            <td class="py-2.5 text-xs text-gray-400"><?php echo date("M j, Y", strtotime($row['received_date'])); ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr><td colspan="6" class="py-6 text-center text-xs text-gray-400">No stock batches found.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -158,38 +197,26 @@ $warning_stmt->close();
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        $('#batchesTable').DataTable();
+document.addEventListener('DOMContentLoaded', function() {
+    $('#batchesTable').DataTable({ pageLength: 15, order: [[4, 'asc']] });
 
-        const locationData = <?php echo json_encode($location_chart_data); ?>;
-
-        if (locationData.labels.length > 0) {
-            const ctxLocation = document.getElementById('locationStockChart').getContext('2d');
-            new Chart(ctxLocation, {
-                type: 'bar',
-                data: {
-                    labels: locationData.labels,
-                    datasets: [{
-                        label: 'Total Units in Location',
-                        data: locationData.values,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Total Units' }
-                        }
-                    }
+    const locationData = <?php echo json_encode($location_chart_data); ?>;
+    if (locationData.labels.length > 0) {
+        new Chart(document.getElementById('locationStockChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: locationData.labels,
+                datasets: [{ data: locationData.values, backgroundColor: '#3b82f6', borderRadius: 6, barThickness: 22 }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+});
 </script>

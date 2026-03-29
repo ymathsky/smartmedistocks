@@ -197,219 +197,254 @@ $usage_chart_data = [
 ];
 
 ?>
+<style>
+.dash-card { transition: transform 0.18s, box-shadow 0.18s; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.section-title { font-size: 0.9375rem; font-weight: 700; color: #111827; }
+</style>
 
-<div class="p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">Administrator Dashboard</h1>
-
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-blue-500">
-            <h2 class="text-gray-600 text-sm font-bold">Total Inventory Value</h2>
-            <p class="text-3xl font-bold text-gray-800 mt-2">₱<?php echo number_format($total_inventory_value, 2); ?></p>
+<div class="p-5 max-w-screen-2xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-wrap justify-between items-center mb-7 gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
+            <p class="text-sm text-gray-400 mt-0.5"><?php echo date('l, F j, Y'); ?></p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-red-500">
-            <h2 class="text-gray-600 text-sm font-bold">Items Below Reorder Point</h2>
-            <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo $rop_items_count; ?></p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-yellow-500">
-            <h2 class="text-gray-600 text-sm font-bold">Slow-Moving Items</h2>
-            <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo $slow_moving_count; ?></p>
+        <div class="flex flex-wrap gap-2">
+            <a href="user_management.php" class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Users
+            </a>
+            <a href="supplier_management.php" class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                Suppliers
+            </a>
+            <a href="item_management.php" class="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7"/></svg>
+                Manage Items
+            </a>
+            <a href="global_settings.php" class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg shadow-sm transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Settings
+            </a>
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Inventory Value by Category</h2>
-            <canvas id="categoryValueChart"></canvas>
+    <!-- KPI Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-7">
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">Assets</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-900">&#8369;<?php echo number_format($total_inventory_value, 2); ?></p>
+            <p class="text-xs text-gray-400 mt-1">Total Inventory Value</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Daily Item Usage (Last 14 Days)</h2>
-            <canvas id="usageTrendChart"></canvas>
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <?php echo $rop_items_count > 0 ? '<span class="text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full">Action Needed</span>' : '<span class="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">&#10003; OK</span>'; ?>
+            </div>
+            <p class="text-2xl font-bold text-gray-900"><?php echo $rop_items_count; ?></p>
+            <p class="text-xs text-gray-400 mt-1">Items Below Reorder Point</p>
+        </div>
+        <div class="dash-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full">Monitor</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-900"><?php echo $slow_moving_count; ?></p>
+            <p class="text-xs text-gray-400 mt-1">Slow-Moving Items</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-7">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <p class="section-title mb-4">Inventory Value by Category</p>
+            <canvas id="categoryValueChart" height="190"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <p class="section-title mb-4">Daily Item Usage &mdash; Last 14 Days</p>
+            <canvas id="usageTrendChart" height="190"></canvas>
         </div>
     </div>
 
     <!-- Warehouse Overview -->
-    <div class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Warehouse Overview</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+    <div class="mb-7">
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
+            <h2 class="section-title">Warehouse Overview</h2>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <!-- Stock by Location -->
-            <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Stock by Location</h3>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <p class="section-title mb-4">Stock by Location</p>
                 <?php if (!empty($warehouse_locations)): ?>
-                    <ul class="space-y-2">
+                    <?php $max_loc = max(array_column($warehouse_locations, 'total_quantity')); ?>
+                    <div class="space-y-3">
                         <?php foreach ($warehouse_locations as $loc): ?>
-                            <li class="flex justify-between items-center text-sm">
-                                <span class="text-gray-700 font-medium"><?php echo htmlspecialchars($loc['name']); ?></span>
-                                <span class="bg-blue-100 text-blue-800 font-mono font-bold px-2 py-1 rounded"><?php echo number_format($loc['total_quantity']); ?> units</span>
-                            </li>
+                            <?php $pct = $max_loc > 0 ? round(($loc['total_quantity'] / $max_loc) * 100) : 0; ?>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-medium text-gray-700 truncate max-w-[140px]"><?php echo htmlspecialchars($loc['name']); ?></span>
+                                    <span class="text-xs font-bold text-blue-700"><?php echo number_format($loc['total_quantity']); ?></span>
+                                </div>
+                                <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-1.5 bg-blue-400 rounded-full" style="width:<?php echo $pct; ?>%"></div>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
-                    </ul>
+                    </div>
                 <?php else: ?>
-                    <p class="text-sm text-gray-500">No location data available.</p>
+                    <p class="text-xs text-gray-400">No location data.</p>
                 <?php endif; ?>
             </div>
 
             <!-- Critical Expiry -->
-            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-lg">
-                <h3 class="text-lg font-bold text-red-700 mb-4 border-b border-red-200 pb-2">Expiring &lt; 30 Days</h3>
-                <?php if ($expiry_critical_result->num_rows > 0): ?>
-                    <ul class="space-y-2 text-sm">
-                        <?php while ($row = $expiry_critical_result->fetch_assoc()): ?>
-                            <li class="text-red-800">
-                                <span class="font-bold"><?php echo $row['quantity']; ?>x <?php echo htmlspecialchars($row['name']); ?></span><br>
-                                <span class="text-xs text-red-600">Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?> &mdash; <?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span>
-                            </li>
-                        <?php endwhile; ?>
-                    </ul>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="section-title">Expiring &lt;30 Days</p>
+                    <span class="text-xs font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Critical</span>
+                </div>
+                <?php $exp_c_rows = []; if ($expiry_critical_result) { while ($r = $expiry_critical_result->fetch_assoc()) $exp_c_rows[] = $r; } ?>
+                <?php if (!empty($exp_c_rows)): ?>
+                    <div class="space-y-2">
+                        <?php foreach ($exp_c_rows as $r): ?>
+                            <div class="flex items-start justify-between gap-2 pb-2 border-b border-gray-50 last:border-0">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold text-gray-800 truncate"><?php echo htmlspecialchars($r['name']); ?></p>
+                                    <p class="text-xs text-gray-400"><?php echo htmlspecialchars($r['item_code']); ?> &mdash; <?php echo htmlspecialchars($r['location_name'] ?? 'N/A'); ?></p>
+                                </div>
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-xs font-bold text-red-600"><?php echo date("M j", strtotime($r['expiry_date'])); ?></p>
+                                    <p class="text-xs text-gray-400"><?php echo $r['quantity']; ?> units</p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php else: ?>
-                    <p class="text-sm text-red-600">No critical expiry items.</p>
+                    <div class="flex flex-col items-center justify-center py-5 text-center">
+                        <svg class="w-8 h-8 text-green-200 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-xs text-gray-400">No critical expiry alerts</p>
+                    </div>
                 <?php endif; ?>
             </div>
 
             <!-- Warning Expiry -->
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-lg">
-                <h3 class="text-lg font-bold text-yellow-700 mb-4 border-b border-yellow-200 pb-2">Expiring 30&ndash;60 Days</h3>
-                <?php if ($expiry_warning_result->num_rows > 0): ?>
-                    <ul class="space-y-2 text-sm">
-                        <?php while ($row = $expiry_warning_result->fetch_assoc()): ?>
-                            <li class="text-yellow-800">
-                                <span class="font-bold"><?php echo $row['quantity']; ?>x <?php echo htmlspecialchars($row['name']); ?></span><br>
-                                <span class="text-xs text-yellow-600">Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?> &mdash; <?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span>
-                            </li>
-                        <?php endwhile; ?>
-                    </ul>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="section-title">Expiring 30&ndash;60 Days</p>
+                    <span class="text-xs font-semibold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">Warning</span>
+                </div>
+                <?php $exp_w_rows = []; if ($expiry_warning_result) { while ($r = $expiry_warning_result->fetch_assoc()) $exp_w_rows[] = $r; } ?>
+                <?php if (!empty($exp_w_rows)): ?>
+                    <div class="space-y-2">
+                        <?php foreach ($exp_w_rows as $r): ?>
+                            <div class="flex items-start justify-between gap-2 pb-2 border-b border-gray-50 last:border-0">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold text-gray-800 truncate"><?php echo htmlspecialchars($r['name']); ?></p>
+                                    <p class="text-xs text-gray-400"><?php echo htmlspecialchars($r['item_code']); ?> &mdash; <?php echo htmlspecialchars($r['location_name'] ?? 'N/A'); ?></p>
+                                </div>
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-xs font-bold text-amber-600"><?php echo date("M j", strtotime($r['expiry_date'])); ?></p>
+                                    <p class="text-xs text-gray-400"><?php echo $r['quantity']; ?> units</p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php else: ?>
-                    <p class="text-sm text-yellow-600">No items expiring in this range.</p>
+                    <div class="flex flex-col items-center justify-center py-5 text-center">
+                        <svg class="w-8 h-8 text-green-200 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-xs text-gray-400">No expiry warnings</p>
+                    </div>
                 <?php endif; ?>
             </div>
-
         </div>
     </div>
 
-    <!-- Quick Management Links & Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        <!-- Quick Management Links -->
-        <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Management Panels</h2>
-            <div class="space-y-3">
-                <a href="user_management.php" class="flex items-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <span class="font-semibold text-gray-700">User Management</span>
-                </a>
-                <a href="item_management.php" class="flex items-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <span class="font-semibold text-gray-700">Item Management</span>
-                </a>
-                <a href="supplier_management.php" class="flex items-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <span class="font-semibold text-gray-700">Supplier Management</span>
-                </a>
-                <a href="global_settings.php" class="flex items-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <span class="font-semibold text-gray-700">Global Settings</span>
-                </a>
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-2">
+                <div class="w-1 h-5 bg-blue-600 rounded-full"></div>
+                <p class="section-title">Recent Item Usage</p>
             </div>
+            <a href="transaction_history.php" class="text-xs text-blue-600 hover:underline font-medium">View all &rarr;</a>
         </div>
-
-        <!-- Recent Transactions -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Recent Item Usage</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
-                        <th class="py-2 px-4 text-right text-xs font-medium text-gray-500 uppercase">Quantity Used</th>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                        <th class="pb-3 text-left font-semibold tracking-wide">Date</th>
+                        <th class="pb-3 text-left font-semibold tracking-wide">Item</th>
+                        <th class="pb-3 text-right font-semibold tracking-wide">Qty Used</th>
                     </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                    <?php if ($recent_transactions_result && $recent_transactions_result->num_rows > 0): ?>
-                        <?php while($row = $recent_transactions_result->fetch_assoc()): ?>
-                            <tr>
-                                <td class="py-3 px-4 text-sm text-gray-600"><?php echo date("M j, Y", strtotime($row['transaction_date'])); ?></td>
-                                <td class="py-3 px-4 text-sm text-gray-800 font-medium"><?php echo htmlspecialchars($row['name']); ?></td>
-                                <td class="py-3 px-4 text-sm text-gray-600 text-right font-mono"><?php echo htmlspecialchars($row['quantity_used']); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-gray-500">No recent transactions found.</td>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                <?php if ($recent_transactions_result && $recent_transactions_result->num_rows > 0): ?>
+                    <?php while($row = $recent_transactions_result->fetch_assoc()): ?>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 text-xs text-gray-400"><?php echo date("M j, Y", strtotime($row['transaction_date'])); ?></td>
+                            <td class="py-3 text-sm font-medium text-gray-800"><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td class="py-3 text-right text-sm font-bold text-gray-700 font-mono"><?php echo $row['quantity_used']; ?></td>
                         </tr>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr><td colspan="3" class="py-6 text-center text-xs text-gray-400">No recent transactions.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Data from PHP
-        const categoryData = <?php echo json_encode($category_chart_data); ?>;
-        const usageData = <?php echo json_encode($usage_chart_data); ?>;
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryData = <?php echo json_encode($category_chart_data); ?>;
+    const usageData    = <?php echo json_encode($usage_chart_data); ?>;
+    const palette = ['#3b82f6','#06b6d4','#8b5cf6','#f59e0b','#10b981','#ef4444','#f97316','#ec4899'];
 
-        // Chart 1: Inventory Value by Category
-        if (categoryData.labels.length > 0) {
-            const ctxCategory = document.getElementById('categoryValueChart').getContext('2d');
-            new Chart(ctxCategory, {
-                type: 'pie',
-                data: {
-                    labels: categoryData.labels,
-                    datasets: [{
-                        label: 'Inventory Value',
-                        data: categoryData.values,
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.8)', 'rgba(255, 99, 132, 0.8)',
-                            'rgba(255, 206, 86, 0.8)', 'rgba(75, 192, 192, 0.8)',
-                            'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.raw !== null) {
-                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PHP' }).format(context.raw);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
+    if (categoryData.labels.length > 0) {
+        new Chart(document.getElementById('categoryValueChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.labels,
+                datasets: [{ data: categoryData.values, backgroundColor: palette, borderWidth: 3, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true, cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, padding: 14 } },
+                    tooltip: { callbacks: { label: function(c) { return ' ₱' + Number(c.raw).toLocaleString('en-PH', {minimumFractionDigits:2}); } } }
                 }
-            });
-        }
-
-        // Chart 2: Daily Usage Trend
-        if (usageData.values.length > 0) {
-            const ctxUsage = document.getElementById('usageTrendChart').getContext('2d');
-            new Chart(ctxUsage, {
-                type: 'line',
-                data: {
-                    labels: usageData.labels,
-                    datasets: [{
-                        label: 'Units Used',
-                        data: usageData.values,
-                        fill: true,
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+    if (usageData.labels.length > 0) {
+        new Chart(document.getElementById('usageTrendChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: usageData.labels,
+                datasets: [{ label: 'Units Used', data: usageData.values, fill: true, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.07)', tension: 0.4, pointRadius: 3, pointBackgroundColor: '#3b82f6' }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+});
 </script>
+
