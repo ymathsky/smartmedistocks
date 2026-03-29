@@ -66,7 +66,7 @@ $history_stmt->close();
 ?>
 
 <!-- Main Content -->
-<div class="p-6">
+<div class="flex-1 p-6 bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg mx-auto">
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Receive Incoming Stock</h1>
         <p class="mb-6 text-gray-600">Use this form to record the arrival of new inventory. Receiving stock from a **Purchase Order** will automatically update its status to 'Received'.</p>

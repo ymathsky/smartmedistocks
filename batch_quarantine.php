@@ -40,7 +40,7 @@ if ($count_result) {
 
 <link rel="stylesheet" href="dashboard.css">
 
-<div class="p-6">
+<div class="flex-1 p-6 bg-gray-100 min-h-screen">
     <div class="max-w-6xl mx-auto">
 
         <!-- Page Header -->

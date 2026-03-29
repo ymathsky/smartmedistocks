@@ -15,7 +15,7 @@ $items_sql = "SELECT item_id, name, item_code FROM items ORDER BY name ASC";
 $items_result = $conn->query($items_sql);
 ?>
 
-<div class="p-6">
+<div class="flex-1 p-6 bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg mx-auto">
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Physical Stock Adjustment</h1>
         <p class="mb-6 text-gray-600">Use this form to correct inventory levels due to physical counts, loss, or spoilage. All adjustments are logged.</p>

@@ -33,7 +33,7 @@ $near_result = $conn->query($near_sql);
 
 <link rel="stylesheet" href="dashboard.css">
 
-<div class="p-6">
+<div class="flex-1 p-6 bg-gray-100 min-h-screen">
     <div class="max-w-5xl mx-auto">
         <!-- Page Header -->
         <div class="mb-6">

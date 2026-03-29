@@ -4,14 +4,15 @@
 // as well as the complete HTML and JavaScript for the AI chat widget,
 // the notification system, and DataTables library includes.
 ?>
-        </main><!-- closes <main> from header.php -->
-        <!-- Application Footer -->
-        <footer class="flex-shrink-0 text-center text-sm text-slate-400 py-3 border-t border-slate-200 bg-white">
+</div> <!-- Closes the container div from header.php -->
+</main> <!-- Closes the main tag from header.php -->
+
+<!-- Application Footer -->
+<footer class="text-center text-sm text-gray-600 py-4 mt-auto border-t border-gray-200 bg-gray-50">
     &copy; <?php echo date("Y"); ?> Smart Medi Stocks. All rights reserved. |
     <a href="terms.php" class="text-blue-600 hover:underline" target="_blank">Terms of Use</a> |
     <a href="privacy.php" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>
-        </footer>
-</div><!-- closes <div class="md:ml-64 flex flex-col"> from header.php -->
+</footer>
 
 <!-- AI Chat Widget -->
 <div id="ai-chat-widget" class="fixed bottom-5 right-5 z-50">
@@ -472,31 +473,6 @@
             setInterval(fetchNotifications, POLLING_INTERVAL);
         }
     });
-</script>
-
-<script>
-// Topbar dropdown toggles
-document.addEventListener('DOMContentLoaded', function () {
-    function makeToggle(btnId, dropId) {
-        var btn  = document.getElementById(btnId);
-        var drop = document.getElementById(dropId);
-        if (!btn || !drop) return;
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            drop.classList.toggle('hidden');
-        });
-    }
-    makeToggle('notification-bubble', 'notification-dropdown');
-    makeToggle('user-menu-btn', 'user-menu-dropdown');
-
-    document.addEventListener('click', function () {
-        var ids = ['notification-dropdown', 'user-menu-dropdown'];
-        ids.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
-        });
-    });
-});
 </script>
 
 </body>
