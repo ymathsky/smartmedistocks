@@ -57,7 +57,7 @@ $items_sql = "
         i.item_id, i.name, i.item_code, i.unit_cost, i.unit_of_measure,
         s.name AS supplier_name, s.supplier_id, /* Added supplier_id */
         s.average_lead_time_days,
-        COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND quantity > 0), 0) as current_stock, /* Ensure only positive stock */
+        COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND quantity > 0 AND status = 'Active'), 0) as current_stock, /* Ensure only positive stock */
         COALESCE(td.total_usage, 0) as total_usage_90_days,
         COALESCE(td.transaction_days, 0) as transaction_days_90
     FROM

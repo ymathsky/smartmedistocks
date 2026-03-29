@@ -150,7 +150,7 @@ if ($action === 'get_history') {
         $item_sql = "
             SELECT
                 i.name, i.item_code, i.unit_cost,
-                COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id), 0) as current_stock,
+                COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock,
                 s.average_lead_time_days,
                 COALESCE(td.total_usage, 0) as total_usage_90_days,
                 COALESCE(td.transaction_days, 0) as transaction_days_90
@@ -269,7 +269,7 @@ if ($action === 'get_history') {
         $stmt->close();
     } elseif (strpos($user_message, 'slow-moving') !== false || strpos($user_message, 'not been used') !== false) {
         $is_internal_query = true;
-        $slow_moving_sql = "SELECT i.name, i.item_code, COALESCE(SUM(t.quantity_used), 0) AS usage_90_days, COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id), 0) as current_stock FROM items i LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ? GROUP BY i.item_id, i.name, i.item_code HAVING usage_90_days < 10 AND current_stock > 0 ORDER BY usage_90_days ASC LIMIT 10;";
+        $slow_moving_sql = "SELECT i.name, i.item_code, COALESCE(SUM(t.quantity_used), 0) AS usage_90_days, COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock FROM items i LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ? GROUP BY i.item_id, i.name, i.item_code HAVING usage_90_days < 10 AND current_stock > 0 ORDER BY usage_90_days ASC LIMIT 10;";
         $stmt = $conn->prepare($slow_moving_sql);
         $stmt->bind_param("s", $ninety_days_ago);
         $stmt->execute();

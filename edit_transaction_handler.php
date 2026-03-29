@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 3. Adjust stock levels based on the difference
         if ($quantity_diff > 0) { // More items used than originally recorded, deduct more
             $remaining_to_deduct = $quantity_diff;
-            $batches_stmt = $conn->prepare("SELECT batch_id, quantity FROM item_batches WHERE item_id = ? AND quantity > 0 ORDER BY expiry_date ASC, received_date ASC");
+            $batches_stmt = $conn->prepare("SELECT batch_id, quantity FROM item_batches WHERE item_id = ? AND quantity > 0 AND status = 'Active' ORDER BY expiry_date ASC, received_date ASC");
             $batches_stmt->bind_param("i", $item_id);
             $batches_stmt->execute();
             $batches_result = $batches_stmt->get_result();

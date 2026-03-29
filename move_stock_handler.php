@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         // A. Check for sufficient stock in the source location
-        $stock_check_stmt = $conn->prepare("SELECT SUM(quantity) as total_stock FROM item_batches WHERE item_id = ? AND location_id = ?");
+        $stock_check_stmt = $conn->prepare("SELECT SUM(quantity) as total_stock FROM item_batches WHERE item_id = ? AND location_id = ? AND status = 'Active'");
         $stock_check_stmt->bind_param("ii", $item_id, $source_location_id);
         $stock_check_stmt->execute();
         $total_stock = $stock_check_stmt->get_result()->fetch_assoc()['total_stock'] ?? 0;
@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // B. Fetch batches to move (FEFO - Oldest expiry date first)
-        $batches_stmt = $conn->prepare("SELECT batch_id, quantity, expiry_date, expected_delivery_date, purchase_order_id FROM item_batches WHERE item_id = ? AND location_id = ? AND quantity > 0 ORDER BY expiry_date ASC, received_date ASC");
+        $batches_stmt = $conn->prepare("SELECT batch_id, quantity, expiry_date, expected_delivery_date, purchase_order_id FROM item_batches WHERE item_id = ? AND location_id = ? AND quantity > 0 AND status = 'Active' ORDER BY expiry_date ASC, received_date ASC");
         $batches_stmt->bind_param("ii", $item_id, $source_location_id);
         $batches_stmt->execute();
         $batches_result = $batches_stmt->get_result();

@@ -16,6 +16,7 @@ $expired_sql = "SELECT b.batch_id, b.item_id, b.quantity, b.expiry_date, b.purch
                 FROM item_batches b
                 JOIN items i ON b.item_id = i.item_id
                 WHERE b.expiry_date < CURDATE() AND b.quantity > 0
+                  AND b.status IN ('Active', 'Quarantined')
                 ORDER BY b.expiry_date ASC";
 $expired_result = $conn->query($expired_sql);
 
@@ -25,6 +26,7 @@ $near_sql = "SELECT b.batch_id, b.item_id, b.quantity, b.expiry_date, b.purchase
              FROM item_batches b
              JOIN items i ON b.item_id = i.item_id
              WHERE b.expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND b.quantity > 0
+               AND b.status = 'Active'
              ORDER BY b.expiry_date ASC";
 $near_result = $conn->query($near_sql);
 ?>

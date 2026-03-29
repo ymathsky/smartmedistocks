@@ -25,7 +25,7 @@ $items_sql = "
     SELECT 
         i.item_id, i.name as item_name, i.item_code, i.unit_cost,
         s.average_lead_time_days,
-        COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id), 0) as current_stock,
+        COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock,
         COALESCE(td.total_usage, 0) as total_usage_90_days,
         COALESCE(td.transaction_days, 0) as transaction_days_90
     FROM items i
@@ -80,7 +80,7 @@ $slow_moving_sql = "
     FROM items i
     LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
     GROUP BY i.item_id
-    HAVING usage_90_days < 10 AND (SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id) > 0
+    HAVING usage_90_days < 10 AND (SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active') > 0
     ORDER BY usage_90_days ASC
     LIMIT 10;
 ";

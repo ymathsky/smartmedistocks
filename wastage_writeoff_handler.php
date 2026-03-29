@@ -75,6 +75,7 @@ try {
          FROM item_batches b
          JOIN items i ON b.item_id = i.item_id
          WHERE b.batch_id IN ($placeholders) AND b.quantity > 0
+           AND b.status IN ('Active', 'Quarantined')
          FOR UPDATE"
     );
     $fetch_stmt->bind_param($types, ...$batch_ids);
@@ -87,7 +88,7 @@ try {
     }
 
     // Process each batch
-    $zero_stmt = $conn->prepare("UPDATE item_batches SET quantity = 0 WHERE batch_id = ?");
+    $zero_stmt = $conn->prepare("UPDATE item_batches SET quantity = 0, status = 'Written-Off' WHERE batch_id = ?");
     $txn_stmt  = $conn->prepare(
         "INSERT INTO transactions (item_id, quantity_used, transaction_date, transaction_type, notes)
          VALUES (?, ?, ?, 'Wastage Write-off', ?)"
@@ -100,7 +101,7 @@ try {
         $val      = $qty * (float)$batch['unit_cost'];
         $note_txt = "Wastage write-off — Batch #{$bid}, Expiry: {$batch['expiry_date']}. Reason: {$reason}";
 
-        // Zero the batch
+        // Zero the batch and mark as Written-Off
         $zero_stmt->bind_param("i", $bid);
         $zero_stmt->execute();
 
