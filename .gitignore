@@ -1,0 +1,29 @@
+# ---- PHP runtime files ----
+error_log
+*.log
+php_errorlog
+
+# ---- Uploaded files (if stored locally) ----
+uploads/
+
+# ---- Environment / secrets (add if you use these) ----
+.env
+.env.local
+config.local.php
+
+# ---- cPanel / Let's Encrypt managed ----
+.well-known/
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- IDE files ----
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---- Composer vendor (not present, but future-proof) ----
+vendor/
