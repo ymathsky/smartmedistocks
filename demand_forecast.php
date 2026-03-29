@@ -101,7 +101,7 @@ $items_result = $conn->query($items_sql);
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
                 <h3 class="text-sm font-bold text-blue-800 uppercase">Mean Abs. % Error (MAPE)</h3>
                 <p id="mape_display" class="text-2xl font-bold text-blue-600 mt-1">--</p>
-                <p class="text-xs text-gray-500">Model Accuracy</p>
+                <p id="confidence_badge" class="inline-block mt-1 px-2 py-0.5 text-xs font-bold rounded-full"></p>
             </div>
             <div class="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
                 <h3 class="text-sm font-bold text-red-800 uppercase">Reorder Point (ROP)</h3>
@@ -161,7 +161,27 @@ $items_result = $conn->query($items_sql);
         };
 
         const renderKPIs = (metrics, model, classification) => {
+            const mapeVal = parseFloat(metrics.mape);
             document.getElementById('mape_display').textContent = metrics.mape ? `${metrics.mape}%` : 'N/A';
+
+            // Confidence badge based on MAPE thresholds
+            const badge = document.getElementById('confidence_badge');
+            badge.className = 'inline-block mt-1 px-2 py-0.5 text-xs font-bold rounded-full';
+            if (!isNaN(mapeVal)) {
+                if (mapeVal < 15) {
+                    badge.textContent = '\u2714 High Confidence';
+                    badge.classList.add('bg-green-100', 'text-green-800');
+                } else if (mapeVal <= 30) {
+                    badge.textContent = '\u26A0 Medium Confidence';
+                    badge.classList.add('bg-yellow-100', 'text-yellow-800');
+                } else {
+                    badge.textContent = '\u2718 Low Confidence';
+                    badge.classList.add('bg-red-100', 'text-red-800');
+                }
+            } else {
+                badge.textContent = 'N/A';
+                badge.classList.add('bg-gray-100', 'text-gray-500');
+            }
             document.getElementById('rop_display').textContent = metrics.rop ?? 'N/A';
             document.getElementById('eoq_display').textContent = metrics.eoq ?? 'N/A';
             document.getElementById('avg_demand_display').textContent = metrics.avg_forecast_demand ? metrics.avg_forecast_demand.toFixed(2) : 'N/A';

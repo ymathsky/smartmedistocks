@@ -54,8 +54,16 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
 ?>
 
 <div class="p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">What-If Scenario Simulator</h1>
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+        <h1 class="text-3xl font-bold text-gray-800">What-If Scenario Simulator</h1>
+        <div class="flex rounded-lg overflow-hidden border border-gray-300 text-sm font-semibold">
+            <button id="tab_single" onclick="switchTab('single')" class="px-4 py-2 bg-blue-600 text-white">Single Item</button>
+            <button id="tab_aclass" onclick="switchTab('aclass')" class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50">All A-Class Items</button>
+        </div>
+    </div>
 
+    <!-- Single Item Mode -->
+    <div id="mode_single">
     <div class="flex flex-col md:flex-row gap-8">
         <!-- Left Column: Controls -->
         <div class="w-full md:w-1/3">
@@ -127,6 +135,31 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
                 </div>
             </div>
         </div>
+    </div>
+    </div> <!-- /mode_single -->
+
+    <!-- All A-Class Items Mode -->
+    <div id="mode_aclass" class="hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+            <div class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Annual Holding Cost Rate (%)</label>
+                    <input type="range" id="aclass_holding" min="5" max="50" value="<?= $default_holding_cost ?>" class="w-40 h-2 bg-gray-200 rounded-lg" oninput="document.getElementById('aclass_holding_val').textContent=this.value">
+                    <span class="ml-1 text-sm font-semibold" id="aclass_holding_val"><?= $default_holding_cost ?></span>%
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Ordering Cost (&#8369;)</label>
+                    <input type="range" id="aclass_ordering" min="10" max="500" step="10" value="<?= $default_ordering_cost ?>" class="w-40 h-2 bg-gray-200 rounded-lg" oninput="document.getElementById('aclass_ordering_val').textContent=this.value">
+                    <span class="ml-1 text-sm font-semibold" id="aclass_ordering_val"><?= $default_ordering_cost ?></span>
+                </div>
+                <button onclick="runAClassSimulation()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Run Simulation</button>
+            </div>
+        </div>
+        <div id="aclass_loading" class="hidden text-center py-12">
+            <div class="animate-spin rounded-full h-14 w-14 border-b-4 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-500">Calculating across all A-class items&hellip;</p>
+        </div>
+        <div id="aclass_results" class="hidden"></div>
     </div>
 </div>
 
@@ -273,6 +306,91 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
             sliders[key].addEventListener('input', () => handleSliderInput(sliders[key], values[key]));
         });
     });
+
+    // --- Tab Switcher ---
+    function switchTab(tab) {
+        const single = document.getElementById('mode_single');
+        const aclass = document.getElementById('mode_aclass');
+        const tSingle = document.getElementById('tab_single');
+        const tAclass = document.getElementById('tab_aclass');
+        if (tab === 'single') {
+            single.classList.remove('hidden'); aclass.classList.add('hidden');
+            tSingle.classList.add('bg-blue-600','text-white'); tSingle.classList.remove('bg-white','text-gray-700');
+            tAclass.classList.remove('bg-blue-600','text-white'); tAclass.classList.add('bg-white','text-gray-700');
+        } else {
+            single.classList.add('hidden'); aclass.classList.remove('hidden');
+            tAclass.classList.add('bg-blue-600','text-white'); tAclass.classList.remove('bg-white','text-gray-700');
+            tSingle.classList.remove('bg-blue-600','text-white'); tSingle.classList.add('bg-white','text-gray-700');
+        }
+    }
+
+    // --- A-Class Simulation ---
+    function runAClassSimulation() {
+        const holdingCost = document.getElementById('aclass_holding').value;
+        const orderingCost = document.getElementById('aclass_ordering').value;
+        const loading = document.getElementById('aclass_loading');
+        const results = document.getElementById('aclass_results');
+
+        loading.classList.remove('hidden');
+        results.classList.add('hidden');
+
+        fetch(`calculate_what_if_all_a.php?holding_cost=${holdingCost}&ordering_cost=${orderingCost}`)
+            .then(r => r.json())
+            .then(data => {
+                loading.classList.add('hidden');
+                if (data.error) {
+                    results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">${data.error}</div>`;
+                    results.classList.remove('hidden');
+                    return;
+                }
+                const sl = data.scenario_labels;
+                const totals = data.scenario_totals;
+                let html = `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5">
+                    <p class="text-sm font-bold text-gray-500 uppercase mb-3">Total Portfolio Holding Cost at Different Service Levels (${data.item_count} A-Class Items)</p>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        ${sl.map((label, i) => `
+                        <div class="p-4 rounded-xl ${i===0?'bg-gray-50':i===1?'bg-blue-50':'bg-red-50'} border">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Service Level ${label}</p>
+                            <p class="text-2xl font-bold mt-1 ${i===0?'text-gray-700':i===1?'text-blue-700':'text-red-700'}">&#8369;${totals[i].total_annual_holding}</p>
+                            <p class="text-xs text-gray-400">Annual Holding Cost</p>
+                            <p class="text-sm font-semibold mt-1">&#8369;${totals[i].total_safety_cost} safety stock value</p>
+                        </div>`).join('')}
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="min-w-full text-sm" id="aclassTable">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Item</th>
+                                <th class="py-3 px-4 text-right">Unit Cost</th>
+                                <th class="py-3 px-4 text-right">EOQ</th>
+                                ${sl.map(l => `<th class="py-3 px-4 text-right">SS @ ${l}</th><th class="py-3 px-4 text-right">ROP @ ${l}</th><th class="py-3 px-4 text-right">Hold Cost @ ${l}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            ${data.rows.map(row => `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="py-2 px-4">${row.item_name} <span class="font-mono text-xs text-gray-400">(${row.item_code})</span></td>
+                                <td class="py-2 px-4 text-right">&#8369;${row.unit_cost}</td>
+                                <td class="py-2 px-4 text-right font-semibold">${row.eoq}</td>
+                                ${row.scenarios.map(s => `<td class="py-2 px-4 text-right">${s.safety_stock}</td><td class="py-2 px-4 text-right">${s.rop}</td><td class="py-2 px-4 text-right text-green-700">&#8369;${s.holding_cost}</td>`).join('')}
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+                results.innerHTML = html;
+                results.classList.remove('hidden');
+                if (typeof $ !== 'undefined') {
+                    $('#aclassTable').DataTable({ pageLength: 25, order: [[1, 'desc']] });
+                }
+            })
+            .catch(() => {
+                loading.classList.add('hidden');
+                results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">An error occurred. Please try again.</div>`;
+                results.classList.remove('hidden');
+            });
+    }
 </script>
 
 <?php

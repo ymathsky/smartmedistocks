@@ -106,6 +106,10 @@ $total_cost = $po_data['quantity_ordered'] * $po_data['unit_cost_agreed'];
                 color: #fff !important;
             }
         }
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-8">
@@ -209,12 +213,25 @@ $total_cost = $po_data['quantity_ordered'] * $po_data['unit_cost_agreed'];
     </div>
 
     <!-- Print Button (Hidden on actual print) -->
-    <div class="text-center mt-6 no-print">
+    <div class="text-center mt-6 no-print flex justify-center gap-3">
         <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
             Print this Document
         </button>
+        <button onclick="savePDF()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
+            &#x2B07; Save as PDF
+        </button>
     </div>
 </div>
+
+<script>
+function savePDF() {
+    // Temporarily set the document title to the PO number so browsers use it as the PDF filename
+    const original = document.title;
+    document.title = 'PO-<?php echo htmlspecialchars($po_data['po_number']); ?>';
+    window.print();
+    document.title = original;
+}
+</script>
 
 </body>
 </html>
