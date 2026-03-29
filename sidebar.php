@@ -14,14 +14,52 @@ function isActive($pageName, $currentPage) {
     return $currentPage === $pageName;
 }
 ?>
-<aside class="w-64 bg-gray-800 text-white flex-shrink-0">
-    <div class="p-4 border-b border-gray-700">
+<!-- Sidebar overlay (mobile only) -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<style>
+#sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+#sidebar.sidebar-open { transform: translateX(0); }
+#sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 40;
+}
+#sidebar-overlay.sidebar-open { display: block; }
+#sidebar-close-btn { display: block; }
+@media (min-width: 768px) {
+    #sidebar {
+        position: relative;
+        transform: translateX(0) !important;
+        flex-shrink: 0;
+        height: 100vh;
+    }
+    #sidebar-overlay { display: none !important; }
+    #sidebar-close-btn { display: none; }
+}
+</style>
+
+<aside id="sidebar" class="w-64 bg-gray-800 text-white">
+    <div class="p-4 border-b border-gray-700 flex items-center justify-between">
         <h2 class="text-xl font-bold flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h4M8 7a2 2 0 012-2h4a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2z" />
             </svg>
             SMS Portal
         </h2>
+        <button id="sidebar-close-btn" onclick="closeSidebar()" class="text-gray-400 hover:text-white focus:outline-none" aria-label="Close menu">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
     <nav class="p-4">
         <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">Navigation</h3>
@@ -287,4 +325,9 @@ function isActive($pageName, $currentPage) {
         </ul>
     </nav>
 </aside>
+
+<script>
+function openSidebar()  { document.getElementById('sidebar').classList.add('sidebar-open'); document.getElementById('sidebar-overlay').classList.add('sidebar-open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('sidebar-open'); document.getElementById('sidebar-overlay').classList.remove('sidebar-open'); }
+</script>
 

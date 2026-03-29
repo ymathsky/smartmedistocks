@@ -89,9 +89,16 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
         <!-- Header -->
         <header class="bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg text-white">
             <div class="container mx-auto px-8 py-5 flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold">SMART MEDI STOCKS</h1>
-                    <p class="text-sm text-blue-200">Role: <span class="font-semibold"><?php echo htmlspecialchars($_SESSION["role"]); ?></span></p>
+                <div class="flex items-center gap-3">
+                    <!-- Hamburger button (mobile only) -->
+                    <button id="hamburger-btn" onclick="openSidebar()" aria-label="Open menu"
+                        class="md:hidden text-white focus:outline-none p-1 rounded hover:bg-blue-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div>
+                        <h1 class="text-3xl font-bold">SMART MEDI STOCKS</h1>
+                        <p class="text-sm text-blue-200">Role: <span class="font-semibold"><?php echo htmlspecialchars($_SESSION["role"]); ?></span></p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-6">
                     <!-- Notification Bell -->
