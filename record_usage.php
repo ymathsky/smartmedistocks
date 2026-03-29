@@ -37,16 +37,21 @@ $items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER B
         <form action="record_usage_handler.php" method="POST">
             <div class="mb-6">
                 <label for="item_id" class="block text-gray-700 font-bold mb-2">Select Item</label>
-                <select id="item_id" name="item_id" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    <option value="">-- Choose an item --</option>
+                <!-- Search box -->
+                <input type="text" id="item_search" placeholder="Search by name or item code..." 
+                    class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
+                    autocomplete="off">
+                <select id="item_id" name="item_id" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required size="6">
+                    <option value="">-- Search above to filter items --</option>
                     <?php
                     if ($items_result && $items_result->num_rows > 0) {
                         while ($item = $items_result->fetch_assoc()) {
-                            echo '<option value="' . htmlspecialchars($item['item_id']) . '">' . htmlspecialchars($item['name']) . ' (' . htmlspecialchars($item['item_code']) . ')</option>';
+                            echo '<option value="' . htmlspecialchars($item['item_id']) . '" data-label="' . strtolower(htmlspecialchars($item['name'])) . ' ' . strtolower(htmlspecialchars($item['item_code'])) . '">' . htmlspecialchars($item['name']) . ' (' . htmlspecialchars($item['item_code']) . ')</option>';
                         }
                     }
                     ?>
                 </select>
+                <p class="text-xs text-gray-400 mt-1" id="item_match_count"></p>
             </div>
 
             <div class="mb-6">
@@ -67,6 +72,53 @@ $items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER B
         </form>
     </div>
 </div>
+
+<script>
+(function() {
+    var searchInput = document.getElementById('item_search');
+    var select      = document.getElementById('item_id');
+    var countLabel  = document.getElementById('item_match_count');
+    var allOptions  = Array.prototype.slice.call(select.querySelectorAll('option'));
+
+    // Remove the placeholder once user starts typing
+    var placeholder = select.querySelector('option[value=""]');
+
+    searchInput.addEventListener('input', function() {
+        var query = this.value.toLowerCase().trim();
+        var visible = 0;
+
+        allOptions.forEach(function(opt) {
+            if (!opt.value) { // placeholder
+                opt.style.display = query ? 'none' : '';
+                return;
+            }
+            var label = opt.getAttribute('data-label') || '';
+            var match = !query || label.indexOf(query) !== -1;
+            opt.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        countLabel.textContent = query ? visible + ' item(s) found' : '';
+
+        // Auto-select if only one match
+        if (visible === 1) {
+            allOptions.forEach(function(opt) {
+                if (opt.value && opt.style.display !== 'none') {
+                    select.value = opt.value;
+                }
+            });
+        }
+    });
+
+    // Collapse size back to 1 once the user selects something
+    select.addEventListener('change', function() {
+        if (this.value) {
+            var chosen = select.options[select.selectedIndex];
+            searchInput.value = chosen.text;
+        }
+    });
+})();
+</script>
 
 <?php
 $conn->close();
