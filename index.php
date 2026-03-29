@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Medi Stocks - AI Inventory Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -402,15 +401,18 @@
     </div>
 </footer>
 
+<script src="https://unpkg.com/lucide@latest" defer></script>
 <script>
-    // Initialize Icons
-    lucide.createIcons();
-
     // Mobile Menu Toggle
     function toggleMobileMenu() {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
     }
+
+    // Initialize Icons after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
 </script>
 </body>
 </html>
