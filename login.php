@@ -9,9 +9,14 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
 
 // Check for login errors from the login handler
 $error = '';
+$message = '';
 if (isset($_SESSION['login_error'])) {
     $error = $_SESSION['login_error'];
     unset($_SESSION['login_error']); // Clear the error after displaying it
+}
+if (isset($_SESSION['login_message'])) {
+    $message = $_SESSION['login_message'];
+    unset($_SESSION['login_message']);
 }
 ?>
 <!DOCTYPE html>
@@ -52,6 +57,11 @@ if (isset($_SESSION['login_error'])) {
                 <p class="text-sm text-gray-500">Please sign in to access your account.</p>
             </div>
 
+            <?php if (!empty($message)): ?>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 text-sm" role="alert">
+                    <span class="block sm:inline"><?php echo htmlspecialchars($message); ?></span>
+                </div>
+            <?php endif; ?>
             <?php if (!empty($error)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-sm" role="alert">
                     <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
@@ -75,6 +85,9 @@ if (isset($_SESSION['login_error'])) {
                             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out">
                         Sign In
                     </button>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="forgot_password.php" class="text-sm text-blue-600 hover:underline">Forgot your password?</a>
                 </div>
             </form>
         </div>

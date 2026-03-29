@@ -9,6 +9,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fullname = trim($_POST['fullname']);
     $contact_number = trim($_POST['contact_number']);
     $address = trim($_POST['address']);
+    $email = trim($_POST['email'] ?? '');
+
+    // Validate email if provided
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['register_error'] = "Please enter a valid email address.";
+        header("location: register.php");
+        exit;
+    }
 
     // --- Validation ---
     if (empty($username) || empty($password) || empty($role) || empty($fullname)) {
@@ -35,10 +43,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Hash the password for security
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    $sql = "INSERT INTO users (username, password, role, fullname, contact_number, address) VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO users (username, email, password, role, fullname, contact_number, address) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("ssssss", $username, $hashed_password, $role, $fullname, $contact_number, $address);
+        $stmt->bind_param("sssssss", $username, $email, $hashed_password, $role, $fullname, $contact_number, $address);
 
         if ($stmt->execute()) {
             // Redirect to login page after successful registration
