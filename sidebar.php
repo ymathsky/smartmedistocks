@@ -68,7 +68,7 @@ $ic = [
 #sidebar-overlay.sidebar-open { display: block; }
 #sidebar-close-btn { display: flex; }
 @media (min-width: 768px) {
-    #sidebar { position: relative; transform: translateX(0) !important; flex-shrink: 0; }
+    #sidebar { transform: translateX(0) !important; }
     #sidebar-overlay { display: none !important; }
     #sidebar-close-btn { display: none !important; }
 }

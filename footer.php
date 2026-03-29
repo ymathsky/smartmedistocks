@@ -11,8 +11,7 @@
     <a href="terms.php" class="text-blue-600 hover:underline" target="_blank">Terms of Use</a> |
     <a href="privacy.php" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>
         </footer>
-    </div><!-- closes <div class="flex-1 flex flex-col"> from header.php -->
-</div><!-- closes <div class="flex h-screen"> from header.php -->
+</div><!-- closes <div class="md:ml-64 flex flex-col"> from header.php -->
 
 <!-- AI Chat Widget -->
 <div id="ai-chat-widget" class="fixed bottom-5 right-5 z-50">
