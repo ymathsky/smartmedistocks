@@ -20,9 +20,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $transaction_id = filter_input(INPUT_POST, 'transaction_id', FILTER_VALIDATE_INT);
     $new_quantity = filter_input(INPUT_POST, 'quantity_used', FILTER_VALIDATE_INT);
     $new_date = $_POST['transaction_date'];
+    $correction_reason = trim($_POST['correction_reason'] ?? '');
 
-    if (!$transaction_id || $new_quantity < 1 || empty($new_date)) {
-        $_SESSION['error'] = "Invalid input provided.";
+    if (!$transaction_id || $new_quantity < 1 || empty($new_date) || empty($correction_reason)) {
+        $_SESSION['error'] = "Invalid input provided. A reason for correction is required.";
         header("Location: edit_transaction.php?id=$transaction_id");
         exit();
     }
@@ -82,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 5. Log the action
         $log_stmt = $conn->prepare("INSERT INTO decision_log (user_id, username, action_type, details) VALUES (?, ?, ?, ?)");
         $action_type = "Edited Transaction";
-        $details = "Edited transaction #$transaction_id. Changed quantity from $old_quantity to $new_quantity. Stock adjusted by " . ($quantity_diff * -1) . " units.";
+        $details = "Edited transaction #$transaction_id for item ID $item_id. Changed quantity from $old_quantity to $new_quantity. Stock adjusted by " . ($quantity_diff * -1) . " units. Reason: $correction_reason";
         $log_stmt->bind_param("isss", $_SESSION['user_id'], $_SESSION['username'], $action_type, $details);
         $log_stmt->execute();
         $log_stmt->close();

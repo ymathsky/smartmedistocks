@@ -17,7 +17,18 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Admin', 'Pharmac
 <div class="p-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Transaction History</h1>
-        <a href="record_usage.php" class="text-blue-600 hover:underline">&larr; Back to Record Usage</a>
+        <div class="flex flex-wrap gap-3 items-center">
+            <?php if ($_SESSION['role'] === 'Admin'): ?>
+            <a href="transaction_outlier_review.php"
+               class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                Review Outliers / Fix Data Errors
+            </a>
+            <?php endif; ?>
+            <a href="record_usage.php" class="text-blue-600 hover:underline">&larr; Back to Record Usage</a>
+        </div>
     </div>
 
     <!-- User Feedback -->
