@@ -27,34 +27,6 @@
   --ds-transition:    0.18s cubic-bezier(.4,0,.2,1);
 }
 
-/* --- Dark Mode ---------------------------------------------------- */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ds-primary:       #3b82f6;
-    --ds-primary-light: #1e3a5f;
-    --ds-surface:       #1e2533;
-    --ds-bg:            #141824;
-    --ds-border:        #2d3748;
-    --ds-text-primary:  #f1f5f9;
-    --ds-text-secondary:#94a3b8;
-    --ds-text-muted:    #64748b;
-    --ds-shadow-sm:     0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.2);
-    --ds-shadow-md:     0 4px 16px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.2);
-    --ds-shadow-lg:     0 12px 32px rgba(0,0,0,.4), 0 4px 10px rgba(0,0,0,.25);
-  }
-  .bg-white, .bg-white.rounded-2xl { background: var(--ds-surface) !important; }
-  body { background: var(--ds-bg); color: var(--ds-text-primary); }
-  .text-gray-900, .text-gray-800 { color: var(--ds-text-primary) !important; }
-  .text-gray-400, .text-gray-500 { color: var(--ds-text-secondary) !important; }
-  .border-gray-100, .border-gray-200 { border-color: var(--ds-border) !important; }
-  .bg-gray-50, .hover\:bg-gray-50:hover { background: rgba(255,255,255,0.04) !important; }
-  .divide-gray-50 > * + * { border-color: var(--ds-border) !important; }
-  .bg-blue-50   { background: rgba(59,130,246,0.12) !important; }
-  .bg-red-50    { background: rgba(239,68,68,0.12)  !important; }
-  .bg-amber-50  { background: rgba(245,158,11,0.12) !important; }
-  .bg-green-50  { background: rgba(16,185,129,0.12) !important; }
-  canvas        { filter: brightness(0.92); }
-}
 
 /* --- Page Shell ---------------------------------------------------- */
 .ds-page {
