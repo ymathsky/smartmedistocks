@@ -4,14 +4,15 @@
 // as well as the complete HTML and JavaScript for the AI chat widget,
 // the notification system, and DataTables library includes.
 ?>
-</main> <!-- Closes the main tag from header.php -->
-
-<!-- Application Footer -->
-<footer class="text-center text-sm text-slate-400 py-4 border-t border-slate-200 bg-white">
+        </main><!-- closes <main> from header.php -->
+        <!-- Application Footer -->
+        <footer class="flex-shrink-0 text-center text-sm text-slate-400 py-3 border-t border-slate-200 bg-white">
     &copy; <?php echo date("Y"); ?> Smart Medi Stocks. All rights reserved. |
     <a href="terms.php" class="text-blue-600 hover:underline" target="_blank">Terms of Use</a> |
     <a href="privacy.php" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a>
-</footer>
+        </footer>
+    </div><!-- closes <div class="flex-1 flex flex-col"> from header.php -->
+</div><!-- closes <div class="flex h-screen"> from header.php -->
 
 <!-- AI Chat Widget -->
 <div id="ai-chat-widget" class="fixed bottom-5 right-5 z-50">

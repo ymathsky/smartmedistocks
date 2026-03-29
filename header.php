@@ -106,7 +106,7 @@ $__avatar   = strtoupper(substr($_SESSION['username'] ?? 'U', 0, 2));
 <div class="flex h-screen overflow-hidden">
     <?php include_once 'sidebar.php'; ?>
 
-    <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+    <div class="flex-1 flex flex-col min-h-0 min-w-0">
 
         <!-- ═══ TOP BAR ═══ -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center px-4 flex-shrink-0 z-30" style="box-shadow:0 1px 3px rgba(15,23,42,.06);">
