@@ -1,6 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home3/smartmed/public_html/smartmedistocks
+    - export DEPLOYPATH=/home3/smartmed/public_html
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/cp -R . $DEPLOYPATH
