@@ -11,8 +11,15 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] != 'Admin' && $_SESSION['rol
     exit();
 }
 
-// Fetch all items to populate the dropdown
-$items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER BY name ASC");
+// Fetch all items with current stock to populate the dropdown
+$items_result = $conn->query("
+    SELECT i.item_id, i.name, i.item_code,
+           COALESCE(SUM(b.quantity), 0) AS current_stock
+    FROM items i
+    LEFT JOIN item_batches b ON i.item_id = b.item_id
+    GROUP BY i.item_id, i.name, i.item_code
+    ORDER BY i.name ASC
+");
 ?>
 
 <div class="p-6">
@@ -46,12 +53,25 @@ $items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER B
                     <?php
                     if ($items_result && $items_result->num_rows > 0) {
                         while ($item = $items_result->fetch_assoc()) {
-                            echo '<option value="' . htmlspecialchars($item['item_id']) . '" data-label="' . strtolower(htmlspecialchars($item['name'])) . ' ' . strtolower(htmlspecialchars($item['item_code'])) . '">' . htmlspecialchars($item['name']) . ' (' . htmlspecialchars($item['item_code']) . ')</option>';
+                            $stock = (int)$item['current_stock'];
+                            echo '<option value="' . htmlspecialchars($item['item_id']) . '"'
+                               . ' data-label="' . strtolower(htmlspecialchars($item['name'])) . ' ' . strtolower(htmlspecialchars($item['item_code'])) . '"'
+                               . ' data-stock="' . $stock . '"'
+                               . '>' . htmlspecialchars($item['name']) . ' (' . htmlspecialchars($item['item_code']) . ')</option>';
                         }
                     }
                     ?>
                 </select>
                 <p class="text-xs text-gray-400 mt-1" id="item_match_count"></p>
+            </div>
+
+            <!-- Real-time stock badge -->
+            <div id="stock_display" class="hidden mb-6 p-4 rounded-lg border flex items-center gap-3">
+                <span class="text-sm font-semibold text-gray-600">Available Stock:</span>
+                <span id="stock_value" class="text-2xl font-bold"></span>
+                <span id="stock_unit" class="text-sm text-gray-500">units</span>
+                <span id="stock_warning" class="hidden ml-auto text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded">⚠ Quantity exceeds available stock</span>
+                <span id="stock_zero" class="hidden ml-auto text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-1 rounded">⚠ No stock available for this item</span>
             </div>
 
             <div class="mb-6">
@@ -80,6 +100,45 @@ $items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER B
     var countLabel  = document.getElementById('item_match_count');
     var allOptions  = Array.prototype.slice.call(select.querySelectorAll('option'));
 
+    var qtyInput    = document.getElementById('quantity_used');
+    var stockBox    = document.getElementById('stock_display');
+    var stockVal    = document.getElementById('stock_value');
+    var stockWarn   = document.getElementById('stock_warning');
+    var stockZero   = document.getElementById('stock_zero');
+    var currentStock = 0;
+
+    function showStock(stock) {
+        currentStock = parseInt(stock, 10);
+        stockBox.classList.remove('hidden');
+        stockVal.textContent = currentStock;
+        // Colour the badge based on level
+        stockBox.className = stockBox.className.replace(/border-\S+|bg-\S+/g, '');
+        if (currentStock === 0) {
+            stockBox.classList.add('border-orange-300', 'bg-orange-50');
+            stockVal.className = 'text-2xl font-bold text-orange-600';
+            stockZero.classList.remove('hidden');
+            stockWarn.classList.add('hidden');
+        } else if (currentStock <= 10) {
+            stockBox.classList.add('border-yellow-300', 'bg-yellow-50');
+            stockVal.className = 'text-2xl font-bold text-yellow-600';
+            stockZero.classList.add('hidden');
+        } else {
+            stockBox.classList.add('border-green-300', 'bg-green-50');
+            stockVal.className = 'text-2xl font-bold text-green-600';
+            stockZero.classList.add('hidden');
+        }
+        checkQty();
+    }
+
+    function checkQty() {
+        var qty = parseInt(qtyInput.value, 10);
+        if (!isNaN(qty) && qty > currentStock && currentStock > 0) {
+            stockWarn.classList.remove('hidden');
+        } else {
+            stockWarn.classList.add('hidden');
+        }
+    }
+
     // Remove the placeholder once user starts typing
     var placeholder = select.querySelector('option[value=""]');
 
@@ -105,18 +164,26 @@ $items_result = $conn->query("SELECT item_id, name, item_code FROM items ORDER B
             allOptions.forEach(function(opt) {
                 if (opt.value && opt.style.display !== 'none') {
                     select.value = opt.value;
+                    showStock(opt.getAttribute('data-stock') || 0);
+                    searchInput.value = opt.text;
                 }
             });
         }
     });
 
-    // Collapse size back to 1 once the user selects something
+    // Show stock when user selects an item
     select.addEventListener('change', function() {
-        if (this.value) {
-            var chosen = select.options[select.selectedIndex];
+        var chosen = select.options[select.selectedIndex];
+        if (chosen && chosen.value) {
             searchInput.value = chosen.text;
+            showStock(chosen.getAttribute('data-stock') || 0);
+        } else {
+            stockBox.classList.add('hidden');
         }
     });
+
+    // Re-validate quantity when user types
+    qtyInput.addEventListener('input', checkQty);
 })();
 </script>
 
