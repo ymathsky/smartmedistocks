@@ -91,18 +91,23 @@ $stmt->execute();
 $items_result = $stmt->get_result();
 
 while ($item = $items_result->fetch_assoc()) {
-    // Check if item has sufficient data for calculations
-    $has_sufficient_data = $item['total_usage_90_days'] > 0 && $item['transaction_days_90'] >= 7;
+    $current_stock_check = (int)$item['current_stock'];
+    $has_sufficient_data = $item['total_usage_90_days'] > 0 && $item['transaction_days_90'] >= 1;
 
-    if (!$has_sufficient_data) {
-        continue; // Skip items without enough data
+    // Always include completely out-of-stock items that have a supplier, even without demand history
+    $is_zero_stock = $current_stock_check === 0 && $item['supplier_id'];
+
+    if (!$has_sufficient_data && !$is_zero_stock) {
+        continue; // Skip items without enough data and not critically out of stock
     }
 
     $current_stock = (int)$item['current_stock'];
-    // Ensure unit_cost is at least a small positive number to avoid division by zero later
     $unit_cost = max(0.01, (float)($item['unit_cost'] ?? 0.01));
-    $lead_time_days = $item['average_lead_time_days'] ? (int)$item['average_lead_time_days'] : 7; // Default 7 days
-    $avg_daily_demand = $item['total_usage_90_days'] / 90.0; // Use float division
+    $lead_time_days = $item['average_lead_time_days'] ? (int)$item['average_lead_time_days'] : 7;
+
+    // For zero-stock items with no usage history, use a minimal demand to force inclusion
+    $usage_90 = $item['total_usage_90_days'] > 0 ? $item['total_usage_90_days'] : 1;
+    $avg_daily_demand = $usage_90 / 90.0;
     $annual_demand = $avg_daily_demand * 365.0;
 
     // Ensure holding cost rate is positive before calculating per unit cost
