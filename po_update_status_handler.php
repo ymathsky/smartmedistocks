@@ -4,6 +4,7 @@
 session_start();
 header('Content-Type: application/json');
 require_once 'db_connection.php';
+require_once 'notifications_helper.php';
 
 // Security check: Only Admins and Procurement can update PO status manually
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Admin', 'Procurement'])) {
@@ -78,6 +79,15 @@ try {
     $response['success'] = true;
     $response['message'] = "PO #{$po_data['po_number']} status updated to '{$new_status}' successfully.";
 
+    // Real-time notifications based on the new status
+    $notif_base = "PO #{$po_data['po_number']} ({$po_data['item_name']}, {$po_data['quantity_ordered']} units)";
+    if ($new_status === 'Shipped') {
+        notify_by_role($conn, "{$notif_base} has been marked as Shipped — expect delivery soon.", ['Admin', 'Warehouse']);
+    } elseif ($new_status === 'Placed') {
+        notify_by_role($conn, "{$notif_base} has been placed with the supplier.", ['Admin', 'Warehouse']);
+    } elseif ($new_status === 'Cancelled') {
+        notify_by_role($conn, "PO #{$po_data['po_number']} has been CANCELLED.", ['Admin', 'Procurement', 'Warehouse']);
+    }
 } catch (Exception $e) {
     $conn->rollback();
     error_log("PO Status Update Error: " . $e->getMessage());

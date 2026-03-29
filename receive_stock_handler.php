@@ -2,6 +2,7 @@
 // Filename: receive_stock_handler.php
 session_start();
 require_once 'db_connection.php';
+require_once 'notifications_helper.php';
 
 // Security check
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Warehouse', 'Admin'])) {
@@ -77,7 +78,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $conn->commit();
         $_SESSION['message'] = "New stock batch has been added successfully to **$location_name**.";
 
-    } catch (Exception $e) {
+        // Real-time notification: inform Procurement and Admin
+        $notif_msg = "Stock Received: {$quantity_received} unit(s) of '{$item_name}' have been received and added to '{$location_name}'.";
+        if ($purchase_order_id) $notif_msg .= " (PO: {$purchase_order_id})";
+        notify_by_role($conn, $notif_msg, ['Admin', 'Procurement']);
         $conn->rollback();
         $_SESSION['error'] = "Transaction failed: " . $e->getMessage();
     }

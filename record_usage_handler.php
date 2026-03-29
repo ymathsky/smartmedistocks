@@ -4,6 +4,7 @@ ob_start(); // Buffer output so any stray echo from included scripts never break
 
 session_start();
 require_once 'db_connection.php';
+require_once 'notifications_helper.php';
 
 // Security check
 if (!isset($_SESSION['role']) || ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Pharmacist' && $_SESSION['role'] != 'Warehouse')) {
@@ -108,9 +109,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $conn->commit();
         $_SESSION['message'] = "Transaction recorded and logged successfully. Stock levels updated.";
 
-        // --- AUTO-TRIGGER ALERT CHECK ---
-        // The included script should not close the connection.
-        @include 'check_alerts_cron.php';
+        // --- LIGHTWEIGHT ROP NOTIFICATION CHECK (single item only) ---
+        $stock_check = $conn->prepare(
+            "SELECT i.name, i.item_code, s.average_lead_time_days,
+                    COALESCE((SELECT SUM(quantity) FROM item_batches WHERE item_id = i.item_id AND status = 'Active'), 0) as current_stock,
+                    COALESCE((SELECT SUM(quantity_used) / 90 FROM transactions WHERE item_id = i.item_id AND transaction_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)), 0) as avg_daily
+             FROM items i LEFT JOIN suppliers s ON i.supplier_id = s.supplier_id
+             WHERE i.item_id = ?"
+        );
+        $stock_check->bind_param("i", $item_id);
+        $stock_check->execute();
+        $item_data = $stock_check->get_result()->fetch_assoc();
+        $stock_check->close();
+
+        if ($item_data && $item_data['avg_daily'] > 0) {
+            $lead = $item_data['average_lead_time_days'] ?? 7;
+            $rop  = round($item_data['avg_daily'] * $lead + 1.65 * sqrt($item_data['avg_daily']) * sqrt($lead));
+            if ((int)$item_data['current_stock'] <= $rop) {
+                $msg = "Stock Alert: '{$item_data['item_name']}' ({$item_data['item_code']}) stock is now {$item_data['current_stock']} unit(s) — at or below Reorder Point ({$rop} units). Consider placing an order.";
+                notify_by_role($conn, $msg, ['Admin', 'Procurement']);
+            }
+        }
 
     } catch (Exception $e) {
         // If any query fails, roll back the changes
