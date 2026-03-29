@@ -2,9 +2,13 @@
 // Deployment verification file - safe to delete after testing
 $checks = [];
 
-// 1. DB connection
-require_once 'db_connection.php';
-$checks['Database Connection'] = isset($conn) && !$conn->connect_error ? 'PASS' : 'FAIL: ' . ($conn->connect_error ?? 'Unknown');
+// 1. DB connection (db_connection.php must be uploaded manually)
+if (file_exists(__DIR__ . '/db_connection.php')) {
+    require_once 'db_connection.php';
+    $checks['Database Connection'] = (isset($conn) && !$conn->connect_error) ? 'PASS' : 'FAIL: ' . (isset($conn) ? $conn->connect_error : 'Unknown');
+} else {
+    $checks['Database Connection'] = 'FAIL: db_connection.php not found - upload it manually via File Manager';
+}
 
 // 2. Warehouse overview feature in admin_dashboard.php
 $admin_dashboard = file_get_contents(__DIR__ . '/admin_dashboard.php');
