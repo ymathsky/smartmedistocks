@@ -88,7 +88,51 @@ $slow_moving_count = $stmt_slow->get_result()->fetch_assoc()['slow_count'] ?? 0;
 $stmt_slow->close();
 
 
-// 4. Fetch Recent Transactions
+// 4. Warehouse: Stock by Location
+$location_stock_sql = "
+    SELECT l.name, SUM(b.quantity) as total_quantity
+    FROM locations l
+    JOIN item_batches b ON l.location_id = b.location_id
+    WHERE b.quantity > 0
+    GROUP BY l.location_id
+    ORDER BY total_quantity DESC
+";
+$location_stock_result = $conn->query($location_stock_sql);
+$warehouse_locations = [];
+if ($location_stock_result) {
+    while ($row = $location_stock_result->fetch_assoc()) {
+        $warehouse_locations[] = $row;
+    }
+}
+
+// 5. Warehouse: Near-Expiry Alerts
+$thirty_days_from_now = date('Y-m-d', strtotime('+30 days'));
+$sixty_days_from_now  = date('Y-m-d', strtotime('+60 days'));
+$expiry_critical_sql = "SELECT i.name, i.item_code, b.quantity, b.expiry_date, l.name as location_name
+    FROM item_batches b
+    JOIN items i ON b.item_id = i.item_id
+    LEFT JOIN locations l ON b.location_id = l.location_id
+    WHERE b.expiry_date IS NOT NULL AND b.expiry_date <= ? AND b.quantity > 0
+    ORDER BY b.expiry_date ASC LIMIT 10";
+$stmt_exp_c = $conn->prepare($expiry_critical_sql);
+$stmt_exp_c->bind_param("s", $thirty_days_from_now);
+$stmt_exp_c->execute();
+$expiry_critical_result = $stmt_exp_c->get_result();
+$stmt_exp_c->close();
+
+$expiry_warning_sql = "SELECT i.name, i.item_code, b.quantity, b.expiry_date, l.name as location_name
+    FROM item_batches b
+    JOIN items i ON b.item_id = i.item_id
+    LEFT JOIN locations l ON b.location_id = l.location_id
+    WHERE b.expiry_date > ? AND b.expiry_date <= ? AND b.quantity > 0
+    ORDER BY b.expiry_date ASC LIMIT 10";
+$stmt_exp_w = $conn->prepare($expiry_warning_sql);
+$stmt_exp_w->bind_param("ss", $thirty_days_from_now, $sixty_days_from_now);
+$stmt_exp_w->execute();
+$expiry_warning_result = $stmt_exp_w->get_result();
+$stmt_exp_w->close();
+
+// 6. Fetch Recent Transactions
 $recent_transactions_sql = "
     SELECT t.transaction_date, i.name, t.quantity_used
     FROM transactions t
@@ -182,6 +226,65 @@ $usage_chart_data = [
         <div class="bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Daily Item Usage (Last 14 Days)</h2>
             <canvas id="usageTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Warehouse Overview -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Warehouse Overview</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Stock by Location -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Stock by Location</h3>
+                <?php if (!empty($warehouse_locations)): ?>
+                    <ul class="space-y-2">
+                        <?php foreach ($warehouse_locations as $loc): ?>
+                            <li class="flex justify-between items-center text-sm">
+                                <span class="text-gray-700 font-medium"><?php echo htmlspecialchars($loc['name']); ?></span>
+                                <span class="bg-blue-100 text-blue-800 font-mono font-bold px-2 py-1 rounded"><?php echo number_format($loc['total_quantity']); ?> units</span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500">No location data available.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Critical Expiry -->
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-lg">
+                <h3 class="text-lg font-bold text-red-700 mb-4 border-b border-red-200 pb-2">Expiring &lt; 30 Days</h3>
+                <?php if ($expiry_critical_result->num_rows > 0): ?>
+                    <ul class="space-y-2 text-sm">
+                        <?php while ($row = $expiry_critical_result->fetch_assoc()): ?>
+                            <li class="text-red-800">
+                                <span class="font-bold"><?php echo $row['quantity']; ?>x <?php echo htmlspecialchars($row['name']); ?></span><br>
+                                <span class="text-xs text-red-600">Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?> &mdash; <?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span>
+                            </li>
+                        <?php endwhile; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-sm text-red-600">No critical expiry items.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Warning Expiry -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-lg">
+                <h3 class="text-lg font-bold text-yellow-700 mb-4 border-b border-yellow-200 pb-2">Expiring 30&ndash;60 Days</h3>
+                <?php if ($expiry_warning_result->num_rows > 0): ?>
+                    <ul class="space-y-2 text-sm">
+                        <?php while ($row = $expiry_warning_result->fetch_assoc()): ?>
+                            <li class="text-yellow-800">
+                                <span class="font-bold"><?php echo $row['quantity']; ?>x <?php echo htmlspecialchars($row['name']); ?></span><br>
+                                <span class="text-xs text-yellow-600">Exp: <?php echo date("M j, Y", strtotime($row['expiry_date'])); ?> &mdash; <?php echo htmlspecialchars($row['location_name'] ?? 'N/A'); ?></span>
+                            </li>
+                        <?php endwhile; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-sm text-yellow-600">No items expiring in this range.</p>
+                <?php endif; ?>
+            </div>
+
         </div>
     </div>
 
