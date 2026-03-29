@@ -20,7 +20,7 @@ $checks['AI No-Asterisk Fix'] = strpos($ai_handler, "str_replace('*', ''") !== f
 
 // 4. ROP fix in get_order_suggestions.php
 $rop_file = file_get_contents(__DIR__ . '/get_order_suggestions.php');
-$checks['ROP Threshold Fix (>= 1)'] = strpos($rop_file, 'transaction_days_90 >= 1') !== false ? 'PASS' : 'FAIL: Fix not found';
+$checks['ROP Threshold Fix (>= 1)'] = strpos($rop_file, "transaction_days_90'] >= 1") !== false ? 'PASS' : 'FAIL: Fix not found';
 
 // 5. .cpanel.yml exists
 $checks['.cpanel.yml Exists'] = file_exists(__DIR__ . '/.cpanel.yml') ? 'PASS' : 'FAIL: File missing';
