@@ -58,20 +58,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                             // Redirect user based on role
                             switch ($role) {
-                                case 'admin':
+                                case 'Admin':
                                     header("location: admin_dashboard.php");
                                     break;
-                                case 'procurement':
+                                case 'Procurement':
                                     header("location: procurement_dashboard.php");
                                     break;
-                                case 'warehouse':
+                                case 'Warehouse':
                                     header("location: warehouse_dashboard.php");
                                     break;
-                                case 'pharmacist':
+                                case 'Pharmacist':
                                     header("location: pharmacist_dashboard.php");
                                     break;
                                 default:
-                                    header("location: index.php"); // Fallback redirect
+                                    header("location: admin_dashboard.php"); // Fallback redirect
                                     break;
                             }
                             exit(); // It's important to exit after a redirect
