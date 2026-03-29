@@ -35,6 +35,60 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
     }
     ?>
 
+    <!-- ── Database Migrations ── -->
+    <?php
+    $migrations_dir = __DIR__ . '/migrations/';
+    $all_migrations = glob($migrations_dir . '*.sql');
+    sort($all_migrations);
+
+    // Run a migration if requested
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_migration'])) {
+        if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) {
+            echo '<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">CSRF token mismatch.</div>';
+        } else {
+            $file = realpath($migrations_dir . basename($_POST['run_migration']));
+            if ($file && str_starts_with($file, realpath($migrations_dir)) && file_exists($file)) {
+                $sql = file_get_contents($file);
+                $statements = array_filter(array_map('trim', explode(';', $sql)), fn($s) => !empty($s));
+                $ok = true;
+                foreach ($statements as $stmt) {
+                    if (!$conn->query($stmt)) {
+                        echo '<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded"><strong>Error in ' . htmlspecialchars(basename($file)) . ':</strong> ' . htmlspecialchars($conn->error) . '</div>';
+                        $ok = false; break;
+                    }
+                }
+                if ($ok) echo '<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded"><strong>✓ Migration applied:</strong> ' . htmlspecialchars(basename($file)) . '</div>';
+            } else {
+                echo '<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">Invalid migration file.</div>';
+            }
+        }
+    }
+    ?>
+    <div class="mb-10">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Database Migrations</h2>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <p class="text-sm text-gray-500 mb-4">Run a SQL migration file against the production database. Each migration is idempotent (uses <code>IF NOT EXISTS</code>) and safe to re-run.</p>
+            <table class="w-full text-sm">
+                <thead><tr class="border-b text-left text-gray-500"><th class="pb-2 pr-4">File</th><th class="pb-2"></th></tr></thead>
+                <tbody>
+                <?php foreach ($all_migrations as $mig): ?>
+                <?php $mig_name = basename($mig); ?>
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-2 pr-4 font-mono text-gray-700"><?php echo htmlspecialchars($mig_name); ?></td>
+                    <td class="py-2">
+                        <form method="POST" onsubmit="return confirm('Apply <?php echo htmlspecialchars($mig_name); ?>?')">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                            <input type="hidden" name="run_migration" value="<?php echo htmlspecialchars($mig_name); ?>">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1 px-3 rounded">Run</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Import Section -->
     <div class="mb-10">
         <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">CSV Import</h2>
