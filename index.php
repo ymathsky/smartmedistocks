@@ -3,6 +3,16 @@
 // This file is the main router for the application. It establishes the database
 // connection first to ensure it is available to all included dashboard views.
 
+// 0. SESSION CHECK — show landing page to guests, dashboard to logged-in users
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
+    // Not logged in — serve the public landing page
+    require_once 'landing.php';
+    exit();
+}
+
 // 1. ESTABLISH DATABASE CONNECTION
 // This is the most critical step. It creates the $conn variable.
 require_once 'db_connection.php';
