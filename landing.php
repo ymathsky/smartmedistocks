@@ -80,8 +80,8 @@
                     </a>
                 </div>
                 <div class="mt-3 sm:mt-0 sm:ml-3">
-                    <a href="https://github.com" target="_blank" class="w-full flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg transition-all">
-                        <i data-lucide="github" class="w-5 h-5 mr-2"></i> View Code
+                    <a href="public_chat.php" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg transition-all">
+                        <i data-lucide="pill" class="w-5 h-5 mr-2"></i> Check Medicine Availability
                     </a>
                 </div>
             </div>
