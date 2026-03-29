@@ -10,6 +10,7 @@ use PHPMailer\PHPMailer\SMTP;
 require_once 'PHPMailer/src/Exception.php';
 require_once 'PHPMailer/src/PHPMailer.php';
 require_once 'PHPMailer/src/SMTP.php';
+require_once 'config.php'; // SMTP credentials — gitignored, never committed
 
 /**
  * Sends a plain text email notification using PHPMailer via SMTP.
@@ -27,26 +28,26 @@ function send_alert_email($to, $subject, $message) {
         $mail->SMTPDebug = SMTP::DEBUG_OFF;
 
         $mail->isSMTP();
-        $mail->Host       = 'mail.smartmedistock.com';              // Set the SMTP server to send through
-        $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-        $mail->Username   = 'support@smartmedistock.com';           // SMTP username
-        $mail->Password   = 'gzMT56ogKJpk8Kwb';                     // SMTP password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            // Enable implicit SSL encryption
-        $mail->Port       = 465;                                    // TCP port to connect to for SMTPS
+        $mail->Host       = SMTP_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USERNAME;
+        $mail->Password   = SMTP_PASSWORD;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Implicit SSL
+        $mail->Port       = SMTP_PORT;
 
-        // ADDED: SSL Certificate Verification Bypass (for troubleshooting)
-        $mail->SMTPOptions = array(
-            'ssl' => array(
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true
-            )
-        );
+        // SSL certificate verification is ENABLED (secure default).
+        // If your mail server uses a self-signed cert, replace 'verify_peer'
+        // with the path to your CA bundle instead of disabling verification.
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'      => true,
+                'verify_peer_name' => true,
+                'allow_self_signed' => false,
+            ]
+        ];
 
         // --- RECIPIENTS ---
-        // Using the support email as the 'From' address as well.
-        $mail->setFrom('support@smartmedistock.com', 'Smart Medi Stocks Alerts');
-        // Use the recipient address passed from the cron job, which is now configurable.
+        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
         $mail->addAddress($to);
 
         // --- CONTENT ---
