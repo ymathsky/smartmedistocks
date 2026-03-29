@@ -313,18 +313,18 @@ if (!empty($all_alerts_found)) {
 
     // Attempt to send the email
     if (send_alert_email($admin_email, $email_subject, $email_message)) {
-        echo "Successfully sent $count alerts to $admin_email (EMAIL SENT SUCCESSFULLY).\n";
+        error_log("CRON: Successfully sent $count alerts to $admin_email.");
         if ($notification_success) {
-            echo "Successfully created " . count($all_alerts_found) . " in-app notifications (DB COMMIT SUCCESS).\n";
+            error_log("CRON: Successfully created " . count($all_alerts_found) . " in-app notifications.");
         } else {
-            echo "WARNING: Email sent, but failed to create all in-app notifications (DB ROLLBACK occurred). Check PHP error log.\n";
+            error_log("CRON WARNING: Email sent, but failed to create all in-app notifications (DB ROLLBACK occurred).");
         }
     } else {
-        echo "Failed to send email alerts.\n";
+        error_log("CRON: Failed to send email alerts.");
     }
 
 } else {
-    echo "No critical stock or expiry alerts found.\n";
+    error_log("CRON: No critical stock or expiry alerts found.");
 }
 
 // Do not close the connection if this script is included by another

@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
 
 } else {
+    ob_end_clean();
     header("Location: record_usage.php");
     exit();
 }
-?>
