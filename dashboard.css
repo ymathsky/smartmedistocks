@@ -27,6 +27,35 @@
   --ds-transition:    0.18s cubic-bezier(.4,0,.2,1);
 }
 
+/* --- Dark Mode ---------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ds-primary:       #3b82f6;
+    --ds-primary-light: #1e3a5f;
+    --ds-surface:       #1e2533;
+    --ds-bg:            #141824;
+    --ds-border:        #2d3748;
+    --ds-text-primary:  #f1f5f9;
+    --ds-text-secondary:#94a3b8;
+    --ds-text-muted:    #64748b;
+    --ds-shadow-sm:     0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.2);
+    --ds-shadow-md:     0 4px 16px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.2);
+    --ds-shadow-lg:     0 12px 32px rgba(0,0,0,.4), 0 4px 10px rgba(0,0,0,.25);
+  }
+  .bg-white, .bg-white.rounded-2xl { background: var(--ds-surface) !important; }
+  body { background: var(--ds-bg); color: var(--ds-text-primary); }
+  .text-gray-900, .text-gray-800 { color: var(--ds-text-primary) !important; }
+  .text-gray-400, .text-gray-500 { color: var(--ds-text-secondary) !important; }
+  .border-gray-100, .border-gray-200 { border-color: var(--ds-border) !important; }
+  .bg-gray-50, .hover\:bg-gray-50:hover { background: rgba(255,255,255,0.04) !important; }
+  .divide-gray-50 > * + * { border-color: var(--ds-border) !important; }
+  .bg-blue-50   { background: rgba(59,130,246,0.12) !important; }
+  .bg-red-50    { background: rgba(239,68,68,0.12)  !important; }
+  .bg-amber-50  { background: rgba(245,158,11,0.12) !important; }
+  .bg-green-50  { background: rgba(16,185,129,0.12) !important; }
+  canvas        { filter: brightness(0.92); }
+}
+
 /* --- Page Shell ---------------------------------------------------- */
 .ds-page {
   background: var(--ds-bg);
@@ -293,4 +322,254 @@ canvas {
 }
 .bg-white.rounded-2xl {
   animation: ds-panelFade 0.38s ease both;
+}
+
+/* =================================================================
+   ENHANCEMENT 1 — Dot-Grid Page Background
+   ================================================================= */
+.p-5.max-w-screen-2xl {
+  background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-color: var(--ds-bg);
+}
+
+/* =================================================================
+   ENHANCEMENT 2 — Tabular Numerals & Improved Typography
+   ================================================================= */
+/* All KPI numbers and monetary values use tabular (fixed-width) digits
+   so the layout never jumps during counter animations */
+.dash-card p.text-2xl,
+.ds-kpi-val,
+td.font-mono,
+td.font-bold {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+/* Section titles get text-balance for wrapping nicely */
+.section-title {
+  text-wrap: balance;
+}
+/* Page header h1 */
+.p-5.max-w-screen-2xl h1 {
+  text-wrap: balance;
+  font-feature-settings: "ss01" 1;
+}
+
+/* =================================================================
+   ENHANCEMENT 3 — Glassmorphism Page Header
+   ================================================================= */
+/* The first direct child `div` of the page wrapper = the header row */
+.p-5.max-w-screen-2xl > div:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(245, 247, 251, 0.78);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 1px solid rgba(229, 233, 240, 0.6);
+  margin-inline: -1.25rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .p-5.max-w-screen-2xl > div:first-child {
+    background: rgba(20, 24, 36, 0.82);
+    border-bottom-color: rgba(45, 55, 72, 0.7);
+  }
+}
+
+/* =================================================================
+   ENHANCEMENT 4 — Animated Status Dot
+   Used in the page header or alert badges to show a live "active" state
+   ================================================================= */
+@keyframes ds-dot-ping {
+  0%   { transform: scale(1);   opacity: 1; }
+  75%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.ds-dot {
+  display: inline-block;
+  position: relative;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ds-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: ds-dot-ping 1.8s cubic-bezier(0,0,.2,1) infinite;
+}
+.ds-dot--green { background: #10b981; }
+.ds-dot--red   { background: #ef4444; }
+.ds-dot--amber { background: #f59e0b; }
+
+/* =================================================================
+   ENHANCEMENT 5 — Skeleton Shimmer Loading State
+   Add class `ds-skeleton` to any block to show loading shimmer
+   ================================================================= */
+@keyframes ds-shimmer-move {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.ds-skeleton {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 25%,
+    #f1f5f9 50%,
+    #e2e8f0 75%
+  );
+  background-size: 800px 100%;
+  animation: ds-shimmer-move 1.4s linear infinite;
+  border-radius: 0.5rem;
+  color: transparent !important;
+  pointer-events: none;
+  user-select: none;
+}
+.ds-skeleton * { visibility: hidden; }
+/* Skeleton row presets */
+.ds-skeleton-row {
+  height: 1.1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 0.6rem;
+}
+.ds-skeleton-row:last-child { width: 65%; }
+
+/* =================================================================
+   ENHANCEMENT 6 — Empty State
+   Replace bare "No data" text with a framed empty-state block
+   ================================================================= */
+.ds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border: 1.5px dashed var(--ds-border);
+  border-radius: var(--ds-radius-card);
+  background: rgba(241,245,249,.5);
+  gap: 0.6rem;
+}
+.ds-empty svg {
+  color: #cbd5e1;
+}
+.ds-empty p {
+  font-size: 0.8125rem;
+  color: var(--ds-text-muted);
+}
+
+/* =================================================================
+   ENHANCEMENT 7 — Section Accent Bar (gradient upgrade)
+   The w-1 h-5 blue bars get a gradient instead of solid color
+   ================================================================= */
+.w-1.h-5.bg-blue-600 {
+  background: linear-gradient(180deg, #3b82f6 0%, #7c3aed 100%) !important;
+  border-radius: 99px;
+  box-shadow: 0 2px 8px rgba(59,130,246,.4);
+}
+.w-1.h-5.bg-amber-500 {
+  background: linear-gradient(180deg, #f59e0b 0%, #ef4444 100%) !important;
+  border-radius: 99px;
+  box-shadow: 0 2px 8px rgba(245,158,11,.4);
+}
+
+/* =================================================================
+   ENHANCEMENT 8 — Scroll-Reveal (JS toggles .ds-visible class)
+   Panels start invisible, JS adds .ds-visible when they scroll into view
+   ================================================================= */
+.ds-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.ds-reveal.ds-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =================================================================
+   ENHANCEMENT 9 — Focus Rings (Accessibility)
+   ================================================================= */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ds-primary);
+  outline-offset: 3px;
+  border-radius: 0.375rem;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ds-primary);
+  outline-offset: 2px;
+}
+
+/* =================================================================
+   ENHANCEMENT 10 — Tooltip (CSS-only, no JS required)
+   Add data-tooltip="..." to any element to get a hover tooltip
+   ================================================================= */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.88);
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.375rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e293b;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 100;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* =================================================================
+   ENHANCEMENT 11 — Print Media Query
+   Print-friendly: remove animations, shadows, sticky headers
+   ================================================================= */
+@media print {
+  .p-5.max-w-screen-2xl > div:first-child {
+    position: static;
+    backdrop-filter: none;
+    background: white;
+    border: none;
+  }
+  .dash-card,
+  .bg-white.rounded-2xl {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    animation: none;
+  }
+  .ds-reveal { opacity: 1; transform: none; }
+  canvas { max-height: 220px; }
+  a[href]::after { content: none; }
 }

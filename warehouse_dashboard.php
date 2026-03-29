@@ -192,6 +192,7 @@ $critical_stmt->close();
 $warning_stmt->close();
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="dashboard.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     $('#batchesTable').DataTable({ pageLength: 15, order: [[4, 'asc']] });

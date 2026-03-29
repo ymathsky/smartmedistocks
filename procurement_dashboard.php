@@ -253,6 +253,7 @@ $po_status_chart_data = ['labels' => $po_status_labels, 'values' => $po_status_v
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="dashboard.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const poStatusData = <?php echo json_encode($po_status_chart_data); ?>;

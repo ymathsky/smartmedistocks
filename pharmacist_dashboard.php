@@ -289,6 +289,7 @@ $top_items_chart_data = ['labels' => $top_items_labels, 'values' => $top_items_v
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="dashboard.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const topItemsData = <?php echo json_encode($top_items_chart_data); ?>;

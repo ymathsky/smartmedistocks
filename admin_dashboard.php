@@ -402,6 +402,7 @@ $usage_chart_data = [
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="dashboard.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const categoryData = <?php echo json_encode($category_chart_data); ?>;
