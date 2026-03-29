@@ -92,8 +92,12 @@ $result = $conn->query($sql);
                                 <?php echo htmlspecialchars(number_format($row['current_stock'])); ?>
                             </td>
                             <td class="py-3 px-4"><?php echo htmlspecialchars($row['unit_of_measure']); ?></td>
-                            <td class="py-3 px-4 text-center whitespace-nowrap"> <!-- Added whitespace-nowrap -->
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <a href="edit_item.php?id=<?php echo htmlspecialchars($row['item_id']); ?>" class="text-blue-500 hover:text-blue-700 font-semibold mr-2">Edit</a>
+
+                                <button type="button"
+                                    onclick="showBarcode(<?php echo json_encode($row['item_code'] ?? $row['item_id']); ?>, <?php echo json_encode($row['name']); ?>)"
+                                    class="text-green-600 hover:text-green-800 font-semibold mr-2">Barcode</button>
 
                                 <!-- CSRF Token added to delete form -->
                                 <form action="delete_item_handler.php" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this item? This action cannot be undone.');">
@@ -121,4 +125,57 @@ $result = $conn->query($sql);
 $conn->close();
 require_once 'footer.php'; // Footer now includes jQuery and DataTables JS
 ?>
+
+<!-- Barcode Modal -->
+<div id="barcodeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
+        <h2 class="text-xl font-bold text-gray-800 mb-1" id="barcodeItemName"></h2>
+        <p class="text-sm text-gray-500 mb-4 font-mono" id="barcodeItemCode"></p>
+        <svg id="barcodeSvg" class="mx-auto"></svg>
+        <div class="mt-6 flex justify-center gap-3">
+            <button onclick="printBarcode()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Print</button>
+            <button onclick="closeBarcodeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+function showBarcode(itemCode, itemName) {
+    document.getElementById('barcodeItemName').textContent = itemName;
+    document.getElementById('barcodeItemCode').textContent = itemCode;
+    try {
+        JsBarcode('#barcodeSvg', itemCode, {
+            format: 'CODE128',
+            width: 2,
+            height: 80,
+            displayValue: true,
+            fontSize: 14,
+            margin: 10
+        });
+    } catch(e) {
+        document.getElementById('barcodeSvg').innerHTML = '<text y="40" fill="red">Cannot generate barcode for this code</text>';
+    }
+    document.getElementById('barcodeModal').classList.remove('hidden');
+}
+
+function closeBarcodeModal() {
+    document.getElementById('barcodeModal').classList.add('hidden');
+}
+
+function printBarcode() {
+    const name = document.getElementById('barcodeItemName').textContent;
+    const code = document.getElementById('barcodeItemCode').textContent;
+    const svgEl = document.getElementById('barcodeSvg');
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>Barcode - ${code}</title><style>body{display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:sans-serif;padding:20px;}h3{margin:0 0 4px;}p{margin:0 0 12px;font-size:13px;color:#555;font-family:monospace;}@media print{button{display:none;}}</style></head><body><h3>${name}</h3><p>${code}</p>${svgData}<br><button onclick="window.print()">Print</button></body></html>`);
+    win.document.close();
+}
+
+// Close modal when clicking backdrop
+document.getElementById('barcodeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBarcodeModal();
+});
+</script>
 
