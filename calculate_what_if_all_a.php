@@ -17,8 +17,18 @@ register_shutdown_function(function() {
     }
 });
 
+// Catch uncaught exceptions (e.g. mysqli_sql_exception) as JSON
+set_exception_handler(function($e) {
+    if (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+    echo json_encode(['error' => get_class($e) . ': ' . $e->getMessage() . ' on line ' . $e->getLine()]);
+    exit(1);
+});
+
 // Catch non-fatal errors as JSON too
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    if (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
     echo json_encode(['error' => "Error [$errno]: $errstr on line $errline"]);
     exit(1);
 });
