@@ -94,7 +94,7 @@ $param_types = 's' . $types . $types;
 $stmt2 = $conn->prepare($demand_sql);
 $stmt2->bind_param($param_types, ...$params);
 $stmt2->execute();
-$demand_rows = $stmt2->get_result()->fetchAll(MYSQLI_ASSOC);
+$demand_rows = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt2->close();
 
 $demand_map = [];
