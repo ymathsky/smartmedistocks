@@ -2,7 +2,16 @@
 // Filename: calculate_what_if_all_a.php
 // Purpose: Runs what-if scenarios for all A-class items across multiple service levels.
 header('Content-Type: application/json');
-error_reporting(0);
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Return errors as JSON instead of HTML 500
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    echo json_encode(['error' => "PHP Error [$errno]: $errstr in $errfile on line $errline"]);
+    exit(1);
+});
+
 require_once 'db_connection.php';
 session_start();
 
@@ -94,7 +103,11 @@ $param_types = 's' . $types . $types;
 $stmt2 = $conn->prepare($demand_sql);
 $stmt2->bind_param($param_types, ...$params);
 $stmt2->execute();
-$demand_rows = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+$demand_result = $stmt2->get_result();
+$demand_rows = [];
+while ($dr = $demand_result->fetch_assoc()) {
+    $demand_rows[] = $dr;
+}
 $stmt2->close();
 
 $demand_map = [];
