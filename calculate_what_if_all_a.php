@@ -54,8 +54,8 @@ $abc_sql = "
     FROM items i
     LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ?
     GROUP BY i.item_id, i.name, i.item_code, i.unit_cost
-    HAVING unit_cost > 0.00 AND total_usage_year > 0
-    ORDER BY (total_usage_year * unit_cost) DESC
+    HAVING i.unit_cost > 0.00 AND COALESCE(SUM(t.quantity_used), 0) > 0
+    ORDER BY (COALESCE(SUM(t.quantity_used), 0) * i.unit_cost) DESC
 ";
 $stmt = $conn->prepare($abc_sql);
 if (!$stmt) {
