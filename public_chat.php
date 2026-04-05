@@ -108,6 +108,7 @@
                     Ask
                 </button>
             </form>
+            <div id="autocomplete-suggestions" class="mt-2 hidden bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10"></div>
             <p class="text-xs text-gray-400 mt-1.5 text-center">This tool only checks medicine availability. For prescriptions, please consult a licensed pharmacist.</p>
         </div>
 
@@ -212,6 +213,63 @@
             document.getElementById('chips-area').style.display = 'none';
             sendQuery(chip.textContent.trim());
         });
+    });
+
+    let debounceTimer;
+    input.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const query = this.value.trim();
+            if (query.length < 1) {
+                hideSuggestions();
+                return;
+            }
+            fetch('public_chat_handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'autocomplete', query })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showSuggestions(data.suggestions);
+            })
+            .catch(() => {
+                hideSuggestions();
+            });
+        }, 300);
+    });
+
+    function showSuggestions(suggestions) {
+        const container = document.getElementById('autocomplete-suggestions');
+        container.innerHTML = '';
+        if (suggestions.length === 0) {
+            container.classList.add('hidden');
+            return;
+        }
+        suggestions.forEach(suggestion => {
+            const div = document.createElement('div');
+            div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm';
+            div.textContent = suggestion;
+            div.addEventListener('click', () => {
+                input.value = suggestion;
+                hideSuggestions();
+                input.focus();
+            });
+            container.appendChild(div);
+        });
+        container.classList.remove('hidden');
+    }
+
+    function hideSuggestions() {
+        document.getElementById('autocomplete-suggestions').classList.add('hidden');
+    }
+
+    form.addEventListener('submit', hideSuggestions);
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !document.getElementById('autocomplete-suggestions').contains(e.target)) {
+            hideSuggestions();
+        }
     });
 
     input.focus();

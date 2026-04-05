@@ -57,6 +57,27 @@ if ($action === 'sample_item') {
     exit();
 }
 
+if ($action === 'autocomplete') {
+    $query = trim($input['query'] ?? '');
+    if (strlen($query) < 1) {
+        echo json_encode(['suggestions' => []]);
+        exit();
+    }
+    $sql = "SELECT DISTINCT name FROM items WHERE name LIKE ? ORDER BY name LIMIT 10";
+    $stmt = $conn->prepare($sql);
+    $like_query = $query . '%';
+    $stmt->bind_param('s', $like_query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $suggestions = [];
+    while ($row = $result->fetch_assoc()) {
+        $suggestions[] = $row['name'];
+    }
+    echo json_encode(['suggestions' => $suggestions]);
+    $conn->close();
+    exit();
+}
+
 // --- Basic rate limiting via session (1 session = max 30 queries per hour) ---
 session_start();
 if (!isset($_SESSION['public_chat_rate'])) {
