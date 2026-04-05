@@ -223,41 +223,6 @@ echo json_encode([
 ]);
 $conn->close();
 
-
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['Admin', 'Pharmacist', 'Procurement', 'Warehouse'])) {
-    echo json_encode(['error' => 'Unauthorized']);
-    exit();
-}
-
-$holding_cost_rate = filter_input(INPUT_GET, 'holding_cost', FILTER_VALIDATE_FLOAT) ?: 25.0;
-$ordering_cost     = filter_input(INPUT_GET, 'ordering_cost', FILTER_VALIDATE_FLOAT) ?: 50.0;
-
-// Z-scores for three representative service levels
-$scenarios = [
-    ['label' => '90%', 'z' => 1.28],
-    ['label' => '95%', 'z' => 1.65],
-    ['label' => '99%', 'z' => 2.33],
-];
-
-// --- 1. Identify A-class items (top ~80% cumulative ACV) ---
-$one_year_ago = date('Y-m-d', strtotime('-365 days'));
-$ninety_days_ago = date('Y-m-d', strtotime('-90 days'));
-
-$abc_sql = "
-    SELECT i.item_id, i.name, i.item_code, i.unit_cost,
-           COALESCE(SUM(t.quantity_used), 0) AS total_usage_year
-    FROM items i
-    LEFT JOIN transactions t ON i.item_id = t.item_id AND t.transaction_date >= ?
-    GROUP BY i.item_id, i.name, i.item_code, i.unit_cost
-    HAVING i.unit_cost > 0.00 AND total_usage_year > 0
-    ORDER BY (total_usage_year * i.unit_cost) DESC
-";
-$stmt = $conn->prepare($abc_sql);
-$stmt->bind_param("s", $one_year_ago);
-$stmt->execute();
-$abc_result = $stmt->get_result();
-$stmt->close();
-
 $all_items = [];
 $total_acv = 0;
 while ($row = $abc_result->fetch_assoc()) {
