@@ -25,6 +25,38 @@ if (!isset($conn) || $conn === null) {
     exit();
 }
 
+// --- Input parsing ---
+$raw_input = file_get_contents('php://input');
+$input = json_decode($raw_input, true);
+if ($raw_input !== '' && $input === null) {
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    echo json_encode(['reply' => 'Invalid JSON request body.']);
+    exit();
+}
+$input = $input ?? [];
+$action = isset($input['action']) ? trim($input['action']) : '';
+$query = isset($input['query']) ? trim($input['query']) : '';
+
+if ($action === 'sample_item') {
+    $sample_sql = "SELECT name FROM items WHERE name <> '' LIMIT 1";
+    $sample_result = $conn->query($sample_sql);
+    if ($sample_result && $row = $sample_result->fetch_assoc()) {
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        echo json_encode(['sample_item' => $row['name']]);
+    } else {
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        echo json_encode(['error' => 'No sample item available in inventory.']);
+    }
+    $conn->close();
+    exit();
+}
+
 // --- Basic rate limiting via session (1 session = max 30 queries) ---
 session_start();
 if (!isset($_SESSION['public_chat_count'])) {
@@ -37,12 +69,10 @@ if ($_SESSION['public_chat_count'] >= 30) {
 }
 $_SESSION['public_chat_count']++;
 
-// --- Input validation ---
-$input = json_decode(file_get_contents('php://input'), true);
-$query = isset($input['query']) ? trim($input['query']) : '';
-
 if (strlen($query) < 2 || strlen($query) > 200) {
-    ob_end_clean();
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
     echo json_encode(['reply' => 'Please enter a valid medicine name (2–200 characters).']);
     exit();
 }

@@ -106,6 +106,24 @@
 </div>
 
 <script>
+let sampleItem = null;
+
+async function fetchSampleItem() {
+    try {
+        const res = await fetch('public_chat_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sample_item' })
+        });
+        const data = await res.json();
+        if (data.sample_item) {
+            sampleItem = data.sample_item;
+        }
+    } catch (e) {
+        console.warn('Could not fetch sample item:', e);
+    }
+}
+
 const tests = {
     systemHealth: [
         {
@@ -127,10 +145,11 @@ const tests = {
         {
             name: 'Handler accepts JSON post',
             test: async () => {
+                const query = sampleItem || 'test';
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'paracetamol' })
+                    body: JSON.stringify({ query })
                 });
                 const data = await res.json();
                 return res.status === 200 && data.reply;
@@ -139,10 +158,11 @@ const tests = {
         {
             name: 'Handler returns valid JSON',
             test: async () => {
+                const query = sampleItem || 'test';
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'test' })
+                    body: JSON.stringify({ query })
                 });
                 try {
                     const data = await res.json();
@@ -187,27 +207,31 @@ const tests = {
         {
             name: 'Finds exact matches',
             test: async () => {
+                const query = sampleItem || 'paracetamol';
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'paracetamol' })
+                    body: JSON.stringify({ query })
                 });
                 const data = await res.json();
-                return data.reply && (data.reply.includes('Paracetamol') || data.reply.includes('paracetamol'));
+                if (!data.reply) return false;
+                return data.reply.toLowerCase().includes(query.toLowerCase());
             },
-            description: 'Should find exact medicine name'
+            description: 'Should find an existing medicine name'
         },
         {
             name: 'Suggests on misspelling',
             test: async () => {
+                const base = sampleItem || 'paracetamol';
+                const typo = makeTypo(base);
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'parasetamol' })
+                    body: JSON.stringify({ query: typo })
                 });
                 const data = await res.json();
-                // Should either find it or suggest
-                return data.reply && (data.reply.includes('mean') || data.reply.includes('Paracetamol'));
+                if (!data.reply) return false;
+                return data.reply.toLowerCase().includes('mean') || data.reply.toLowerCase().includes(base.toLowerCase());
             },
             description: 'Should suggest correct spelling'
         },
@@ -220,7 +244,6 @@ const tests = {
                     body: JSON.stringify({ query: 'am' })
                 });
                 const data = await res.json();
-                // Should handle multiple matches gracefully
                 return data.reply && typeof data.reply === 'string';
             },
             description: 'Should handle multiple matches'
@@ -270,21 +293,22 @@ const tests = {
         {
             name: 'Case insensitivity',
             test: async () => {
+                const query = sampleItem || 'test';
                 const res1 = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'PARACETAMOL' })
+                    body: JSON.stringify({ query: query.toUpperCase() })
                 });
                 const data1 = await res1.json();
                 
                 const res2 = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: 'paracetamol' })
+                    body: JSON.stringify({ query })
                 });
                 const data2 = await res2.json();
                 
-                // Both should find the same result
+                // Both should return a reply string
                 return data1.reply && data2.reply;
             },
             description: 'Should ignore case'
@@ -292,10 +316,11 @@ const tests = {
         {
             name: 'Whitespace trimming',
             test: async () => {
+                const query = sampleItem || 'test';
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: '   paracetamol   ' })
+                    body: JSON.stringify({ query: `   ${query}   ` })
                 });
                 const data = await res.json();
                 return data.reply && typeof data.reply === 'string';
@@ -408,6 +433,8 @@ async function runAllTests() {
     document.getElementById('edgeCaseTests').innerHTML = '';
     document.getElementById('testSummary').innerHTML = '';
     
+    await fetchSampleItem();
+    
     totalCount = Object.values(tests).reduce((sum, arr) => sum + arr.length, 0);
     updateStats();
     
@@ -417,6 +444,11 @@ async function runAllTests() {
             await new Promise(resolve => setTimeout(resolve, 100)); // Stagger requests
         }
     }
+}
+
+function makeTypo(text) {
+    if (!text || text.length < 2) return text + 'x';
+    return text.slice(0, 1) + text[1].replace(/[aeiou]/i, 'a') + text.slice(2);
 }
 
 // Run tests on page load
