@@ -5,8 +5,25 @@
 
 ob_start();
 header('Content-Type: application/json');
+
+set_exception_handler(function($e) {
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    echo json_encode(['reply' => 'Error: ' . $e->getMessage()]);
+    exit();
+});
+
 require_once 'db_connection.php';
 require_once 'fuzzy_search_helper.php';
+
+if (!isset($conn) || $conn === null) {
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    echo json_encode(['reply' => 'Error: Unable to connect to the inventory database.']);
+    exit();
+}
 
 // --- Basic rate limiting via session (1 session = max 30 queries) ---
 session_start();
