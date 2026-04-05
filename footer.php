@@ -214,6 +214,16 @@
         const arrowDown = $('#prompts-arrow-down');
         const arrowUp = $('#prompts-arrow-up');
 
+        let chatHistoryLoaded = false;
+
+        const escapeHtml = (str) => {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
 
         const maxRetries = 3;
         const initialDelayMs = 1000;
@@ -247,6 +257,11 @@
                     if (!chatLog.length) return;
                     chatLog.html(''); // Clear loading message
 
+                    if (data.error) {
+                        chatLog.html(`<div class="text-center text-red-500 p-4">${escapeHtml(data.error)}</div>`);
+                        return;
+                    }
+
                     // Add the default welcome message first
                     const welcomeDiv = $('<div></div>') // Use jQuery to create elements
                         .addClass('mb-2 text-sm text-gray-600 p-3 bg-gray-200 rounded-lg self-start max-w-xs')
@@ -266,6 +281,7 @@
                             chatLog.append(messageDiv);
                         });
                     }
+                    chatHistoryLoaded = true;
                     if (chatLog.length) chatLog.scrollTop(chatLog[0].scrollHeight); // Scroll using jQuery
                 })
                 .catch(error => {
@@ -278,7 +294,9 @@
             chatBubble.on('click', () => { // Use .on() for events
                 if(chatWindow.length) chatWindow.removeClass('hidden');
                 chatBubble.addClass('hidden');
-                loadChatHistory();
+                if (!chatHistoryLoaded) {
+                    loadChatHistory();
+                }
             });
         }
 
@@ -322,10 +340,17 @@
                 .then(data => {
                     if (!chatLog.length) return;
                     thinkingDiv.remove(); // Remove thinking message using jQuery
-                    const aiMessageDiv = $('<div></div>')
-                        .addClass('mb-2 text-sm text-gray-600 p-3 bg-gray-200 rounded-lg self-start max-w-xs')
-                        .html(data.answer || 'Sorry, something went wrong.'); // Use .html()
-                    chatLog.append(aiMessageDiv);
+                    if (data.error) {
+                        const errorMessageDiv = $('<div></div>')
+                            .addClass('mb-2 text-sm text-red-600 p-3 bg-red-100 rounded-lg self-start max-w-xs')
+                            .text(data.error);
+                        chatLog.append(errorMessageDiv);
+                    } else {
+                        const aiMessageDiv = $('<div></div>')
+                            .addClass('mb-2 text-sm text-gray-600 p-3 bg-gray-200 rounded-lg self-start max-w-xs')
+                            .html(data.answer || 'Sorry, something went wrong.'); // Use .html()
+                        chatLog.append(aiMessageDiv);
+                    }
                     chatLog.scrollTop(chatLog[0].scrollHeight);
                 })
                 .catch(error => {

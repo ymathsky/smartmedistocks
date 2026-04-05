@@ -3,6 +3,7 @@
 
 header('Content-Type: application/json');
 require_once 'db_connection.php';
+require_once 'fuzzy_search_helper.php';
 
 // config.php is gitignored — if missing on server, return a clear error
 if (!file_exists(__DIR__ . '/config.php')) {
@@ -11,7 +12,15 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 require_once 'config.php';
 
+// Check if API key is configured
+if (!defined('GEMINI_API_KEY') || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE' || empty(GEMINI_API_KEY)) {
+    echo json_encode(['error' => 'Gemini API key not configured. Please update config.php with a valid API key from Google AI Studio.']);
+    exit;
+}
+
 session_start();
+
+try {
 
 // Ensure the chat_log table exists (self-healing, safe to run every request)
 $conn->query("
@@ -251,24 +260,26 @@ if ($action === 'get_history') {
         if (empty($item_name_guess)) {
             $response = "Please specify the item name or item code you want the EOQ for (e.g., 'EOQ for Paracetamol').";
         } else {
-            $item_search_sql = "SELECT item_id, name FROM items WHERE LOWER(name) LIKE ? OR LOWER(item_code) LIKE ? LIMIT 1";
-            $item_search_term = "%" . $item_name_guess . "%";
-            $stmt_item = $conn->prepare($item_search_sql);
-            $stmt_item->bind_param("ss", $item_search_term, $item_name_guess);
-            $stmt_item->execute();
-            $item_result = $stmt_item->get_result();
-            if ($item_result->num_rows > 0) {
-                $item_row = $item_result->fetch_assoc();
+            // Use fuzzy search to find the item
+            $search_results = fuzzy_search_items($conn, $item_name_guess, 1, 1);
+            $matched_items = $search_results['exact'];
+            $suggested_items = $search_results['suggestions'];
+            
+            if (!empty($matched_items)) {
+                $item_row = $matched_items[0];
                 $metrics = calculate_inventory_metrics($conn, $item_row['item_id'], $z_score, $ordering_cost, $holding_cost_rate, $ninety_days_ago);
                 if (isset($metrics['error'])) {
                     $response = "I found " . htmlspecialchars($item_row['name']) . ", but there is " . $metrics['error'];
                 } else {
                     $response = "For <strong>" . $metrics['name'] . "</strong>, the Economic Order Quantity (EOQ) is <strong>" . $metrics['eoq'] . " units</strong>. This is the optimal quantity to order to minimize costs, based on an average daily demand of " . round($metrics['avg_daily_demand'], 2) . " units. The recommended reorder point is <strong>" . $metrics['reorder_point'] . " units</strong>.";
                 }
+            } elseif (!empty($suggested_items)) {
+                // Show fuzzy suggestions
+                $item_row = $suggested_items[0];
+                $response = "I didn't find an exact match for '<strong>" . htmlspecialchars($item_name_guess) . "</strong>', but did you mean <strong>" . htmlspecialchars($item_row['name']) . "</strong>? Please ask again and I'll calculate its EOQ for you.";
             } else {
-                $response = "I could not find an item matching '" . htmlspecialchars($item_name_guess) . "'.";
+                $response = "I could not find an item matching '" . htmlspecialchars($item_name_guess) . "'. Please check the spelling and try again.";
             }
-            $stmt_item->close();
         }
     } elseif (strpos($user_message, 'expiring') !== false) {
         $is_internal_query = true;
@@ -405,6 +416,10 @@ if ($action === 'get_history') {
 } else {
     // Handle invalid action
     echo json_encode(['error' => 'Invalid action specified.']);
+}
+
+} catch (Exception $e) {
+    echo json_encode(['error' => 'An error occurred: ' . $e->getMessage()]);
 }
 
 $conn->close();

@@ -6,6 +6,7 @@
 ob_start();
 header('Content-Type: application/json');
 require_once 'db_connection.php';
+require_once 'fuzzy_search_helper.php';
 
 // --- Basic rate limiting via session (1 session = max 30 queries) ---
 session_start();
@@ -32,70 +33,36 @@ if (strlen($query) < 2 || strlen($query) > 200) {
 // Sanitize: strip HTML/script tags
 $query = strip_tags($query);
 
-// --- Search items by name or item_code (partial match, case-insensitive) ---
-$search = '%' . $conn->real_escape_string($query) . '%';
+// --- Use fuzzy search helper ---
+$search_results = fuzzy_search_items($conn, $query, 10, 3);
+$matches = $search_results['exact'];
+$suggestions = $search_results['suggestions'];
 
-$sql = "
-    SELECT
-        i.item_id,
-        i.name,
-        i.item_code,
-        i.category,
-        COALESCE(SUM(b.quantity), 0) AS current_stock
-    FROM items i
-    LEFT JOIN item_batches b ON i.item_id = b.item_id
-    WHERE i.name LIKE ? OR i.item_code LIKE ?
-    GROUP BY i.item_id, i.name, i.item_code, i.category
-    ORDER BY i.name ASC
-    LIMIT 10
-";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('ss', $search, $search);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$matches = [];
-while ($row = $result->fetch_assoc()) {
-    $matches[] = $row;
-}
-$stmt->close();
 $conn->close();
 
 // --- Build response ---
 if (empty($matches)) {
-    $reply = "Sorry, we could not find any medicine matching <strong>" . htmlspecialchars($query) . "</strong> in our inventory. Please check the spelling or try a different name.";
-} elseif (count($matches) === 1) {
-    $item  = $matches[0];
-    $stock = (int)$item['current_stock'];
-    $name  = htmlspecialchars($item['name']);
-    $code  = htmlspecialchars($item['item_code']);
-    if ($stock > 10) {
-        $status = "<span style='color:#16a34a;font-weight:600;'>&#10003; Available</span>";
-        $detail = "We currently have this medicine in stock.";
-    } elseif ($stock > 0) {
-        $status = "<span style='color:#ca8a04;font-weight:600;'>&#9888; Limited Stock</span>";
-        $detail = "This medicine is available but in limited quantity. Please visit soon.";
+    if (!empty($suggestions)) {
+        // Show suggestions with fuzzy-matched alternatives
+        $reply = "We couldn't find <strong>" . htmlspecialchars($query) . "</strong>, but did you mean one of these?<br><br>";
+        foreach ($suggestions as $item) {
+            $formatted = format_item_for_display($item);
+            $reply .= generate_suggestion_html($formatted);
+        }
     } else {
-        $status = "<span style='color:#dc2626;font-weight:600;'>&#10007; Out of Stock</span>";
-        $detail = "This medicine is currently unavailable. Please check back later or ask our staff for alternatives.";
+        $reply = "Sorry, we could not find any medicine matching <strong>" . htmlspecialchars($query) . "</strong> in our inventory. Please check the spelling or try a different name.";
     }
-    $reply = "<strong>{$name}</strong> ({$code}) &mdash; {$status}<br><small style='color:#6b7280;'>{$detail}</small>";
+} elseif (count($matches) === 1) {
+    $formatted = format_item_for_display($matches[0]);
+    $reply = generate_exact_match_html($formatted);
 } else {
-    // Multiple matches
+    // Multiple exact matches
     $reply = "Found " . count($matches) . " medicines matching <strong>" . htmlspecialchars($query) . "</strong>:<br><br>";
     foreach ($matches as $item) {
-        $stock = (int)$item['current_stock'];
-        $name  = htmlspecialchars($item['name']);
-        $code  = htmlspecialchars($item['item_code']);
-        if ($stock > 10) {
-            $dot = "<span style='color:#16a34a;'>&#9679;</span> Available";
-        } elseif ($stock > 0) {
-            $dot = "<span style='color:#ca8a04;'>&#9679;</span> Limited";
-        } else {
-            $dot = "<span style='color:#dc2626;'>&#9679;</span> Out of stock";
-        }
-        $reply .= "<div style='margin:4px 0;'><strong>{$name}</strong> <small style='color:#9ca3af;'>({$code})</small> &mdash; {$dot}</div>";
+        $formatted = format_item_for_display($item);
+        $reply .= "<div style='margin:4px 0;'><strong>{$formatted['name']}</strong> " .
+                  "<small style='color:#9ca3af;'>({$formatted['code']})</small> &mdash; " .
+                  "<span style='color:{$formatted['status_color']};'>●</span> {$formatted['status']}</div>";
     }
 }
 

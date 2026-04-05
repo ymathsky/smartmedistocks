@@ -4,8 +4,8 @@
 // config.php is gitignored and should NEVER be committed.
 
 // Google Gemini API
-define('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY_HERE');
-define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent');
+define('GEMINI_API_KEY', 'AIzaSyDUHT4u7h9sGDMyFt0Gnl2VBbzHLbB24Ok');
+define('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
 
 // SMTP Mail Settings
 define('SMTP_HOST',     'mail.yourdomain.com');
