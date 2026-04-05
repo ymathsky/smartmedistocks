@@ -156,7 +156,7 @@ if (empty($matches)) {
         $formatted = format_item_for_display($item);
         $reply .= "<div style='margin:4px 0;'><strong>{$formatted['name']}</strong> " .
                   "<small style='color:#9ca3af;'>({$formatted['code']})</small> &mdash; " .
-                  "<span style='color:{$formatted['status_color']};'>●</span> {$formatted['status']}</div>";
+                  "<span style='color:{$formatted['status_color']};'>●</span> {$formatted['status']}{$formatted['reorder_alert']}</div>";
     }
 }
 

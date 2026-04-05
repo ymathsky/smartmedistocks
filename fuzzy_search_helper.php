@@ -117,14 +117,18 @@ function fuzzy_search_items($conn, $query, $exact_limit = 10, $fuzzy_limit = 3) 
 function format_item_for_display($item) {
     $stock = (int)($item['current_stock'] ?? 0);
     
+    $reorder_alert = '';
     if ($stock > 10) {
-        $status = 'Available';
+        $status = 'Available (' . $stock . ' units)';
         $status_color = '#16a34a';
         $status_icon = '✓';
     } elseif ($stock > 0) {
-        $status = 'Limited';
+        $status = 'Low stock (' . $stock . ' units remaining)';
         $status_color = '#ca8a04';
         $status_icon = '⚠';
+        if ($stock <= 5) {
+            $reorder_alert = ' <small style="color:#dc2626;">- Reorder recommended</small>';
+        }
     } else {
         $status = 'Out of stock';
         $status_color = '#dc2626';
@@ -139,7 +143,8 @@ function format_item_for_display($item) {
         'status_color' => $status_color,
         'status_icon' => $status_icon,
         'category' => htmlspecialchars($item['category'] ?? 'N/A'),
-        'unit_cost' => isset($item['unit_cost']) ? number_format($item['unit_cost'], 2) : 'N/A'
+        'unit_cost' => isset($item['unit_cost']) ? number_format($item['unit_cost'], 2) : 'N/A',
+        'reorder_alert' => $reorder_alert
     ];
 }
 
@@ -151,7 +156,7 @@ function format_item_for_display($item) {
  */
 function generate_exact_match_html($item) {
     return "<strong>{$item['name']}</strong> ({$item['code']}) &mdash; " .
-           "<span style='color:{$item['status_color']};font-weight:600;'>{$item['status_icon']} {$item['status']}</span><br>" .
+           "<span style='color:{$item['status_color']};font-weight:600;'>{$item['status_icon']} {$item['status']}</span>{$item['reorder_alert']}<br>" .
            "<small style='color:#6b7280;'>Category: {$item['category']} | Unit Cost: ₱{$item['unit_cost']}</small>";
 }
 
@@ -166,7 +171,7 @@ function generate_suggestion_html($item) {
            "<strong style='cursor:pointer; color:#1e40af;'>{$item['name']}</strong> " .
            "<small style='color:#9ca3af;'>({$item['code']})</small><br>" .
            "<small style='color:#6b7280;'>Category: {$item['category']} | Stock: " .
-           "<span style='color:{$item['status_color']};'>●</span> {$item['status']}</small>" .
+           "<span style='color:{$item['status_color']};'>●</span> {$item['status']}{$item['reorder_alert']}</small>" .
            "</div>";
 }
 ?>
