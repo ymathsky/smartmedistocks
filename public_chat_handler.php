@@ -57,17 +57,21 @@ if ($action === 'sample_item') {
     exit();
 }
 
-// --- Basic rate limiting via session (1 session = max 30 queries) ---
+// --- Basic rate limiting via session (1 session = max 30 queries per hour) ---
 session_start();
-if (!isset($_SESSION['public_chat_count'])) {
-    $_SESSION['public_chat_count'] = 0;
+if (!isset($_SESSION['public_chat_rate'])) {
+    $_SESSION['public_chat_rate'] = [
+        'count' => 0,
+        'expires' => time() + 3600
+    ];
 }
-if ($_SESSION['public_chat_count'] >= 30) {
-    ob_end_clean();
-    echo json_encode(['reply' => 'You have reached the maximum number of queries for this session. Please try again later.']);
-    exit();
+
+if (time() > $_SESSION['public_chat_rate']['expires']) {
+    $_SESSION['public_chat_rate'] = [
+        'count' => 0,
+        'expires' => time() + 3600
+    ];
 }
-$_SESSION['public_chat_count']++;
 
 if (strlen($query) < 2 || strlen($query) > 200) {
     if (ob_get_level()) {
@@ -76,6 +80,16 @@ if (strlen($query) < 2 || strlen($query) > 200) {
     echo json_encode(['reply' => 'Please enter a valid medicine name (2–200 characters).']);
     exit();
 }
+
+if ($_SESSION['public_chat_rate']['count'] >= 30) {
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    echo json_encode(['reply' => 'You have reached the maximum number of queries for this session. Please try again later.']);
+    exit();
+}
+
+$_SESSION['public_chat_rate']['count']++;
 
 // Sanitize: strip HTML/script tags
 $query = strip_tags($query);
