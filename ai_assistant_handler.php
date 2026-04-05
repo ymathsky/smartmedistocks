@@ -249,7 +249,7 @@ if ($action === 'get_history') {
         } else {
             $response = "I couldn't find any inventory data to generate a cost breakdown report.";
         }
-    } elseif ((strpos($user_message, 'how many') !== false || strpos($user_message, 'remaining') !== false || strpos($user_message, 'current stock') !== false || strpos($user_message, 'in stock') !== false || strpos($user_message, 'stock left') !== false || strpos($user_message, 'remaining stock') !== false) && strpos($user_message, 'stockout') === false) {
+    } elseif (preg_match('/\b(?:how\s+many|hwo\s+many|many\s+(?:in|of|left)|remaining|current stock|in stock|stock left|remaining stock)\b/i', $user_message_raw) && strpos($user_message, 'stockout') === false) {
         $is_internal_query = true;
         $item_name_guess = '';
         if (preg_match('/\b(?:for|of|in|on)\s+(.+?)(\?|$)/i', $user_message_raw, $matches)) {
