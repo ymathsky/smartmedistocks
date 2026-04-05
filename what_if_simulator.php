@@ -324,6 +324,16 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
         }
     }
 
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag]));
+    }
+
     // --- A-Class Simulation ---
     function runAClassSimulation() {
         const holdingCost = document.getElementById('aclass_holding').value;
@@ -334,12 +344,27 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
         loading.classList.remove('hidden');
         results.classList.add('hidden');
 
-        fetch(`calculate_what_if_all_a.php?holding_cost=${holdingCost}&ordering_cost=${orderingCost}`)
-            .then(r => r.json())
-            .then(data => {
+        const url = `calculate_what_if_all_a.php?holding_cost=${holdingCost}&ordering_cost=${orderingCost}`;
+        fetch(url)
+            .then(async r => {
+                const text = await r.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    throw new Error(`Invalid JSON response (${r.status}): ${text.slice(0, 1000)}`);
+                }
+                return { status: r.status, ok: r.ok, data, text };
+            })
+            .then(({ status, ok, data, text }) => {
                 loading.classList.add('hidden');
+                if (!ok) {
+                    results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">HTTP ${status}: ${escapeHtml(text.slice(0, 1000))}</div>`;
+                    results.classList.remove('hidden');
+                    return;
+                }
                 if (data.error) {
-                    results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">${data.error}</div>`;
+                    results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">${escapeHtml(data.error)}</div>`;
                     results.classList.remove('hidden');
                     return;
                 }
@@ -385,9 +410,9 @@ $default_ordering_cost = $settings['ordering_cost'] ?? 50;
                     $('#aclassTable').DataTable({ pageLength: 25, order: [[1, 'desc']] });
                 }
             })
-            .catch(() => {
+            .catch(err => {
                 loading.classList.add('hidden');
-                results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">An error occurred. Please try again.</div>`;
+                results.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-lg">Error: ${escapeHtml(err.message)}</div>`;
                 results.classList.remove('hidden');
             });
     }
