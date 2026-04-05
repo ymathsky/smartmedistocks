@@ -246,11 +246,11 @@ const tests = {
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: '<script>alert("xss")</script>' })
+                    body: JSON.stringify({ query: '<sc' + 'ript>alert("xss")<' + '/script>' })
                 });
                 const data = await res.json();
                 // Should not have unescaped script tags
-                return !data.reply.includes('<script>');
+                return !data.reply.includes('<' + 'script>');
             },
             description: 'Should sanitize HTML'
         },
@@ -260,7 +260,7 @@ const tests = {
                 const res = await fetch('public_chat_handler.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: "paracetamol's \"test\"" })
+                    body: JSON.stringify({ query: 'paracetamol\'s "test"' })
                 });
                 const data = await res.json();
                 return data.reply && typeof data.reply === 'string';
