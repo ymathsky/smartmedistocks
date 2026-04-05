@@ -41,9 +41,17 @@ function fuzzy_search_items($conn, $query, $exact_limit = 10, $fuzzy_limit = 3) 
     ";
     
     $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        throw new Exception('Database prepare error: ' . $conn->error);
+    }
     $stmt->bind_param('ssi', $search_pattern, $search_pattern, $exact_limit);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception('Database execute error: ' . $stmt->error);
+    }
     $exact_result = $stmt->get_result();
+    if (!$exact_result) {
+        throw new Exception('Get result error: ' . $stmt->error);
+    }
     
     while ($row = $exact_result->fetch_assoc()) {
         $result['exact'][] = $row;
@@ -67,32 +75,34 @@ function fuzzy_search_items($conn, $query, $exact_limit = 10, $fuzzy_limit = 3) 
         
         $all_items_result = $conn->query($all_items_sql);
         
-        if ($all_items_result) {
-            $item_distances = [];
-            $query_lower = strtolower($query);
-            
-            while ($item = $all_items_result->fetch_assoc()) {
-                $name_distance = levenshtein($query_lower, strtolower($item['name']));
-                $code_distance = levenshtein($query_lower, strtolower($item['item_code']));
-                $min_distance = min($name_distance, $code_distance);
-                
-                // Dynamic threshold based on query length
-                $threshold = max(3, min(strlen($query), 5));
-                
-                if ($min_distance <= $threshold) {
-                    $item['similarity_score'] = $min_distance;
-                    $item_distances[] = $item;
-                }
-            }
-            
-            // Sort by similarity score (lowest = best match)
-            usort($item_distances, function($a, $b) {
-                return $a['similarity_score'] - $b['similarity_score'];
-            });
-            
-            // Take top N suggestions
-            $result['suggestions'] = array_slice($item_distances, 0, $fuzzy_limit);
+        if (!$all_items_result) {
+            throw new Exception('Database query error: ' . $conn->error);
         }
+        
+        $item_distances = [];
+        $query_lower = strtolower($query);
+        
+        while ($item = $all_items_result->fetch_assoc()) {
+            $name_distance = levenshtein($query_lower, strtolower($item['name']));
+            $code_distance = levenshtein($query_lower, strtolower($item['item_code']));
+            $min_distance = min($name_distance, $code_distance);
+            
+            // Dynamic threshold based on query length
+            $threshold = max(3, min(strlen($query), 5));
+            
+            if ($min_distance <= $threshold) {
+                $item['similarity_score'] = $min_distance;
+                $item_distances[] = $item;
+            }
+        }
+        
+        // Sort by similarity score (lowest = best match)
+        usort($item_distances, function($a, $b) {
+            return $a['similarity_score'] - $b['similarity_score'];
+        });
+        
+        // Take top N suggestions
+        $result['suggestions'] = array_slice($item_distances, 0, $fuzzy_limit);
     }
     
     return $result;

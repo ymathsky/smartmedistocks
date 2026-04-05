@@ -34,9 +34,16 @@ if (strlen($query) < 2 || strlen($query) > 200) {
 $query = strip_tags($query);
 
 // --- Use fuzzy search helper ---
-$search_results = fuzzy_search_items($conn, $query, 10, 3);
-$matches = $search_results['exact'];
-$suggestions = $search_results['suggestions'];
+try {
+    $search_results = fuzzy_search_items($conn, $query, 10, 3);
+    $matches = $search_results['exact'];
+    $suggestions = $search_results['suggestions'];
+} catch (Exception $e) {
+    ob_end_clean();
+    echo json_encode(['reply' => 'Error searching inventory: ' . $e->getMessage()]);
+    $conn->close();
+    exit();
+}
 
 $conn->close();
 
