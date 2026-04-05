@@ -249,39 +249,42 @@ if ($action === 'get_history') {
         } else {
             $response = "I couldn't find any inventory data to generate a cost breakdown report.";
         }
-    } elseif (strpos($user_message, 'calculate the eoq for') !== false || strpos($user_message, 'eoq for') !== false) {
+    } elseif ((strpos($user_message, 'how many') !== false || strpos($user_message, 'remaining') !== false || strpos($user_message, 'current stock') !== false || strpos($user_message, 'in stock') !== false || strpos($user_message, 'stock left') !== false || strpos($user_message, 'remaining stock') !== false) && strpos($user_message, 'stockout') === false) {
         $is_internal_query = true;
-        $prompt_parts = explode(' ', $user_message);
         $item_name_guess = '';
-        $key_index = array_search('for', $prompt_parts);
-        if ($key_index !== false && isset($prompt_parts[$key_index + 1])) {
-            $item_name_guess = $prompt_parts[$key_index + 1];
+        if (preg_match('/\b(?:for|of|in|on)\s+(.+?)(\?|$)/i', $user_message_raw, $matches)) {
+            $item_name_guess = trim($matches[1]);
         }
         if (empty($item_name_guess)) {
-            $response = "Please specify the item name or item code you want the EOQ for (e.g., 'EOQ for Paracetamol').";
+            $item_name_guess = $user_message_raw;
+        }
+        $item_name_guess = preg_replace('/\b(how many|what is|what are|tell me|show me|give me|please|could you|can you|remaining|current stock|stock left|in stock|remaining stock|available|left|units?)\b/i', '', $item_name_guess);
+        $item_name_guess = trim($item_name_guess, " ?.");
+
+        if (empty($item_name_guess)) {
+            $response = "Please specify the medicine name or item code you want stock information for.";
         } else {
-            // Use fuzzy search to find the item
             $search_results = fuzzy_search_items($conn, $item_name_guess, 1, 1);
             $matched_items = $search_results['exact'];
             $suggested_items = $search_results['suggestions'];
-            
+
             if (!empty($matched_items)) {
                 $item_row = $matched_items[0];
-                $metrics = calculate_inventory_metrics($conn, $item_row['item_id'], $z_score, $ordering_cost, $holding_cost_rate, $ninety_days_ago);
-                if (isset($metrics['error'])) {
-                    $response = "I found " . htmlspecialchars($item_row['name']) . ", but there is " . $metrics['error'];
-                } else {
-                    $response = "For <strong>" . $metrics['name'] . "</strong>, the Economic Order Quantity (EOQ) is <strong>" . $metrics['eoq'] . " units</strong>. This is the optimal quantity to order to minimize costs, based on an average daily demand of " . round($metrics['avg_daily_demand'], 2) . " units. The recommended reorder point is <strong>" . $metrics['reorder_point'] . " units</strong>.";
+                $stock = (int)$item_row['current_stock'];
+                $response = "There are <strong>" . $stock . " units</strong> of <strong>" . htmlspecialchars($item_row['name']) . "</strong> (" . htmlspecialchars($item_row['item_code']) . ") currently in stock.";
+                if ($stock === 0) {
+                    $response .= " It is currently out of stock.";
+                } elseif ($stock <= 5) {
+                    $response .= " <strong style='color:#dc2626;'>Reorder recommended.</strong>";
                 }
             } elseif (!empty($suggested_items)) {
-                // Show fuzzy suggestions
                 $item_row = $suggested_items[0];
-                $response = "I didn't find an exact match for '<strong>" . htmlspecialchars($item_name_guess) . "</strong>', but did you mean <strong>" . htmlspecialchars($item_row['name']) . "</strong>? Please ask again and I'll calculate its EOQ for you.";
+                $response = "I couldn't find an exact match for '<strong>" . htmlspecialchars($item_name_guess) . "</strong>', but did you mean <strong>" . htmlspecialchars($item_row['name']) . "</strong>?";
             } else {
-                $response = "I could not find an item matching '" . htmlspecialchars($item_name_guess) . "'. Please check the spelling and try again.";
+                $response = "I could not find any item matching '<strong>" . htmlspecialchars($item_name_guess) . "</strong>'. Please check the spelling or try a different product name.";
             }
         }
-    } elseif (strpos($user_message, 'expiring') !== false) {
+    } elseif (strpos($user_message, 'calculate the eoq for') !== false || strpos($user_message, 'eoq for') !== false) {
         $is_internal_query = true;
         $three_months_from_now = date('Y-m-d', strtotime('+3 months'));
         $expiry_sql = "SELECT i.name, i.item_code, SUM(b.quantity) as total_expiring_qty, MIN(b.expiry_date) as earliest_expiry FROM item_batches b JOIN items i ON b.item_id = i.item_id WHERE b.expiry_date IS NOT NULL AND b.expiry_date <= ? AND b.quantity > 0 GROUP BY i.item_id, i.name, i.item_code ORDER BY earliest_expiry ASC LIMIT 10";
