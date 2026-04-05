@@ -78,13 +78,18 @@ if ($action === 'autocomplete') {
     exit();
 }
 
-// --- Basic rate limiting via session (1 session = max 30 queries per hour) ---
+// --- Basic rate limiting via session (1 session = max 100 queries per hour) ---
 session_start();
 if (!isset($_SESSION['public_chat_rate'])) {
     $_SESSION['public_chat_rate'] = [
         'count' => 0,
         'expires' => time() + 3600
     ];
+}
+
+// Safety reset if count is abnormally high
+if (isset($_SESSION['public_chat_rate']['count']) && $_SESSION['public_chat_rate']['count'] > 100) {
+    $_SESSION['public_chat_rate']['count'] = 0;
 }
 
 if (time() > $_SESSION['public_chat_rate']['expires']) {
@@ -102,7 +107,7 @@ if (strlen($query) < 2 || strlen($query) > 200) {
     exit();
 }
 
-if ($_SESSION['public_chat_rate']['count'] >= 30) {
+if ($_SESSION['public_chat_rate']['count'] >= 100) {
     if (ob_get_level()) {
         ob_end_clean();
     }
