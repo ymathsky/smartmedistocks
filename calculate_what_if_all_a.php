@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Filename: calculate_what_if_all_a.php
 // Purpose: Runs what-if scenarios for all A-class items across multiple service levels.
 header('Content-Type: application/json');
@@ -223,3 +223,4 @@ echo json_encode([
 ]);
 $conn->close();
 ?>
+
